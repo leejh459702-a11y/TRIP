@@ -2,10 +2,37 @@
   padding: 4px 16px 8px;
 }
 
+.selectToggle {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
 .sectionTitle {
+  display: flex;
+  align-items: center;
   font-size: 13px;
   font-weight: 700;
   padding: 12px 0 8px;
+}
+
+.reminderCard {
+  background: var(--surface);
+  border: 1px solid var(--ok);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.overdueBadge {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--warn);
 }
 
 .card {

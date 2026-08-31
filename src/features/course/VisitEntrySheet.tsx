@@ -14,19 +14,22 @@ export interface VisitEntryValues {
   revisit: Revisit;
   companions: string[];
   memo: string;
+  cost?: number;
 }
 
 interface VisitEntrySheetProps {
   placeName: string;
+  estCost?: number; // B10: 예상 비용 — 실제 비용 입력란의 기본값
   onSave: (values: VisitEntryValues) => void;
   onSkip: () => void;
 }
 
-/** C4: 블록 완료 시 올라오는 방문 기록 입력 시트 — 재방문판정/동행/메모 3항목. */
-export function VisitEntrySheet({ placeName, onSave, onSkip }: VisitEntrySheetProps) {
+/** C4: 블록 완료 시 올라오는 방문 기록 입력 시트 — 재방문판정/동행/메모 3항목(+선택: 실제 비용). */
+export function VisitEntrySheet({ placeName, estCost, onSave, onSkip }: VisitEntrySheetProps) {
   const [revisit, setRevisit] = useState<Revisit>('yes');
   const [companions, setCompanions] = useState<string[]>([]);
   const [memo, setMemo] = useState('');
+  const [cost, setCost] = useState(estCost != null ? String(estCost) : '');
 
   function toggleCompanion(name: string) {
     setCompanions((prev) => (prev.includes(name) ? prev.filter((c) => c !== name) : [...prev, name]));
@@ -80,6 +83,19 @@ export function VisitEntrySheet({ placeName, onSave, onSkip }: VisitEntrySheetPr
           />
         </div>
 
+        <div>
+          <div className={styles.sectionLabel}>실제 비용 (선택)</div>
+          <input
+            type="number"
+            min={0}
+            className={styles.memoInput}
+            value={cost}
+            onChange={(e) => setCost(e.target.value)}
+            placeholder="원"
+            style={{ width: '100%' }}
+          />
+        </div>
+
         <div className={styles.actions}>
           <button className={styles.skipButton} type="button" onClick={onSkip}>
             건너뛰기
@@ -87,7 +103,9 @@ export function VisitEntrySheet({ placeName, onSave, onSkip }: VisitEntrySheetPr
           <button
             className={styles.saveButton}
             type="button"
-            onClick={() => onSave({ revisit, companions, memo })}
+            onClick={() =>
+              onSave({ revisit, companions, memo, cost: cost ? Number(cost) : undefined })
+            }
           >
             기록 저장
           </button>

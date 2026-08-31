@@ -6,11 +6,14 @@ import { useAuthStore } from '../../store/authStore';
 import { usePlacesStore } from '../../store/placesStore';
 import { useCoursesStore } from '../../store/coursesStore';
 import { useVisitsStore } from '../../store/visitsStore';
+import { useSettingsStore } from '../../store/settingsStore';
 import type { Block, Course, CourseDay, RouteLeg } from '../../domain/types';
 import {
   createDay,
   createFreeBlock,
   createPlaceBlock,
+  createTemplateFrom,
+  fillSlot,
   removeBlockById,
   swapBlockPlace,
   updateBlock as patchBlock,
@@ -48,9 +51,12 @@ export function CourseDetailPage() {
   const courses = useCoursesStore((s) => s.courses);
   const subscribeCourses = useCoursesStore((s) => s.subscribe);
   const saveCourse = useCoursesStore((s) => s.saveCourse);
+  const createFromObject = useCoursesStore((s) => s.createFromObject);
   const visits = useVisitsStore((s) => s.visits);
   const subscribeVisits = useVisitsStore((s) => s.subscribe);
   const recordVisit = useVisitsStore((s) => s.recordVisit);
+  const longTransferThresholdMin = useSettingsStore((s) => s.longTransferThresholdMin);
+  const subscribeSettings = useSettingsStore((s) => s.subscribe);
 
   const [view, setView] = useState<ViewMode>('block');
   const [activeDayId, setActiveDayId] = useState<string | null>(null);
@@ -63,12 +69,14 @@ export function CourseDetailPage() {
     const unsubPlaces = subscribePlaces(uid);
     const unsubCourses = subscribeCourses(uid);
     const unsubVisits = subscribeVisits(uid);
+    const unsubSettings = subscribeSettings(uid);
     return () => {
       unsubPlaces();
       unsubCourses();
       unsubVisits();
+      unsubSettings();
     };
-  }, [uid, subscribePlaces, subscribeCourses, subscribeVisits]);
+  }, [uid, subscribePlaces, subscribeCourses, subscribeVisits, subscribeSettings]);
 
   const course = courses.find((c) => c.id === courseId);
   const day = course?.days.find((d) => d.id === activeDayId) ?? course?.days[0];
@@ -211,16 +219,31 @@ export function CourseDetailPage() {
     URL.revokeObjectURL(url);
   }
 
+  async function handleSaveAsTemplate() {
+    if (!uid || !course) return;
+    const name = window.prompt('템플릿 이름을 입력하세요', `${course.title} 템플릿`);
+    if (!name?.trim()) return;
+    await createFromObject(uid, createTemplateFrom(course, name.trim()));
+    window.alert('템플릿으로 저장했습니다. 일정 탭에서 확인할 수 있어요.');
+  }
+
   const usedPlaceIds = new Set(blocks.filter((b) => b.placeId).map((b) => b.placeId));
   const candidatePlaces = places.filter((p) => !usedPlaceIds.has(p.id));
 
-  const timeline = computeTimeline(day, resolvedBlocks, legs);
+  const timelineOptions = { longTransferThresholdMin };
+  const timeline = computeTimeline(day, resolvedBlocks, legs, timelineOptions);
   // C2: 지연 때문에 새로 생긴 경고를 강조하기 위해 지연 없는 버전과 비교합니다.
-  const timelineNoDelay = computeTimeline(day, withoutDelay(resolvedBlocks), legs);
+  const timelineNoDelay = computeTimeline(day, withoutDelay(resolvedBlocks), legs, timelineOptions);
   const delayWarningBlockIds = newWarningBlockIds(timeline.entries, timelineNoDelay.entries);
 
   const recordedPlaceIds = new Set(
     visits.filter((v) => v.courseId === course.id).map((v) => v.placeId),
+  );
+
+  // B10: 전체 코스(모든 날짜) 예상 예산 합계.
+  const totalCourseEstCost = course.days.reduce(
+    (sum, d) => sum + d.blocks.reduce((s, b) => s + (b.estCost ?? 0), 0),
+    0,
   );
 
   function handleCheckoff(blockId: string) {
@@ -250,6 +273,7 @@ export function CourseDetailPage() {
       revisit: values.revisit,
       companions: values.companions,
       memo: values.memo || undefined,
+      cost: values.cost,
       stayMin,
       partySize: course.partySize,
     });
@@ -277,6 +301,12 @@ export function CourseDetailPage() {
         onSelectDay={setActiveDayId}
         onAddDay={handleAddDay}
       />
+
+      {totalCourseEstCost > 0 && (
+        <div style={{ padding: '0 16px 10px', fontSize: 12, color: 'var(--ink-muted)' }}>
+          전체 예상 예산 <span className="num">{totalCourseEstCost.toLocaleString()}</span>원
+        </div>
+      )}
 
       <div className={styles.anchorRow}>
         <span>숙소</span>
@@ -316,6 +346,21 @@ export function CourseDetailPage() {
         >
           캘린더로 내보내기 (.ics)
         </button>
+        <button
+          type="button"
+          onClick={handleSaveAsTemplate}
+          style={{
+            border: '1px solid var(--line)',
+            background: 'var(--surface)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '6px 12px',
+            fontSize: 12,
+            cursor: 'pointer',
+            marginLeft: 6,
+          }}
+        >
+          템플릿으로 저장
+        </button>
       </div>
 
       {view === 'block' && (
@@ -339,10 +384,15 @@ export function CourseDetailPage() {
               onSwapPlace={(blockId, replacement) =>
                 persistBlocks(swapBlockPlace(blocks, blockId, replacement))
               }
+              onFillSlot={(blockId, replacement) =>
+                persistBlocks(fillSlot(blocks, blockId, replacement))
+              }
             />
             <AddBlockPanel
               candidatePlaces={candidatePlaces}
-              onAddPlace={(place) => persistBlocks([...blocks, createPlaceBlock(place)])}
+              onAddPlace={(place) =>
+                persistBlocks([...blocks, createPlaceBlock(place, course.partySize)])
+              }
               onAddFree={() => persistBlocks([...blocks, createFreeBlock('자유시간')])}
             />
           </div>
@@ -369,6 +419,7 @@ export function CourseDetailPage() {
       {checkoffBlock && checkoffPlace && (
         <VisitEntrySheet
           placeName={checkoffPlace.name}
+          estCost={checkoffBlock.estCost}
           onSave={handleSaveVisit}
           onSkip={() => setCheckoffBlockId(null)}
         />

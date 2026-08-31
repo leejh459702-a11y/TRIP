@@ -14,6 +14,7 @@ export interface TimelineTotals {
   totalTravelMin: number;
   totalStayMin: number;
   placeCount: number;
+  totalEstCost: number; // B10
 }
 
 export interface TimelineResult {
@@ -74,6 +75,7 @@ export function computeTimeline(
   let totalTravelMin = 0;
   let totalStayMin = 0;
   let placeCount = 0;
+  let totalEstCost = 0;
 
   for (const { block, place } of blocks) {
     // C2: 블록에 새 누적 지연이 보고되면 그 차이만큼 cursor를 한 번만 밀어줍니다.
@@ -98,11 +100,12 @@ export function computeTimeline(
     totalStayMin += block.stayMin;
     if (block.type === 'place') placeCount += 1;
     if (legToNext) totalTravelMin += legToNext.durationMin;
+    if (block.estCost) totalEstCost += block.estCost;
 
     cursor = legToNext ? addMinutes(leaveAt, legToNext.durationMin) : leaveAt;
   }
 
-  return { entries, totals: { totalTravelMin, totalStayMin, placeCount } };
+  return { entries, totals: { totalTravelMin, totalStayMin, placeCount, totalEstCost } };
 }
 
 /** C2: delayMin을 제거한 비교용 블록 목록을 만듭니다 (지연 없었다면 어땠을지 계산용). */

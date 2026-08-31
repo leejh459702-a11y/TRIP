@@ -1,0 +1,48 @@
+.section {
+  padding: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.themeButton {
+  flex: 1;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 8px 0;
+  font-size: 12px;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.themeButtonActive {
+  background: var(--ink);
+  color: var(--surface);
+  border-color: var(--ink);
+}
+
+.linkButton {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.desc {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 8px;
+}

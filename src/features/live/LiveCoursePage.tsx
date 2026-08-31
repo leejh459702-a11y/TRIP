@@ -122,6 +122,7 @@ export function LiveCoursePage() {
       revisit: values.revisit,
       companions: values.companions,
       memo: values.memo || undefined,
+      cost: values.cost,
       partySize: course.partySize,
     });
     setCheckoffBlockId(null);
@@ -227,6 +228,7 @@ export function LiveCoursePage() {
       {checkoffBlock && checkoffPlace && (
         <VisitEntrySheet
           placeName={checkoffPlace.name}
+          estCost={checkoffBlock.estCost}
           onSave={handleSaveVisit}
           onSkip={() => setCheckoffBlockId(null)}
         />

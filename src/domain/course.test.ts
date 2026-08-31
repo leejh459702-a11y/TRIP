@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   createFreeBlock,
   createPlaceBlock,
+  createTemplateFrom,
+  fillSlot,
+  instantiateFromTemplate,
   nearestPlaces,
   reorderBlocks,
   removeBlockById,
@@ -9,7 +12,7 @@ import {
   updateBlockMode,
   updateBlockStayMin,
 } from './course';
-import type { Block, Place } from './types';
+import type { Block, Course, Place } from './types';
 
 function place(id: string, overrides: Partial<Place> = {}): Place {
   return {
@@ -57,6 +60,16 @@ describe('createPlaceBlock', () => {
     expect(block.placeId).toBe('p1');
     expect(block.type).toBe('place');
     expect(block.modeToNext).toBe('car');
+  });
+
+  it('B10: 1인당 예상 비용 × 인원수를 기본 estCost로 쓴다', () => {
+    const block = createPlaceBlock(place('p1', { estCostPerPerson: 15000 }), 3);
+    expect(block.estCost).toBe(45000);
+  });
+
+  it('B10: 1인당 예상 비용이 없으면 estCost도 없다', () => {
+    const block = createPlaceBlock(place('p1'), 3);
+    expect(block.estCost).toBeUndefined();
   });
 });
 
@@ -114,5 +127,71 @@ describe('swapBlockPlace', () => {
     const next = swapBlockPlace(blocks, 'a', replacement);
     expect(next[0]?.placeId).toBe('p2');
     expect(next[0]?.stayMin).toBe(90);
+  });
+});
+
+describe('fillSlot', () => {
+  it('체류시간·이동수단은 그대로 두고 장소만 채운다', () => {
+    const blocks: Block[] = [{ id: 'a', type: 'place', stayMin: 75, modeToNext: 'walk' }];
+    const next = fillSlot(blocks, 'a', place('p1'));
+    expect(next[0]?.placeId).toBe('p1');
+    expect(next[0]?.stayMin).toBe(75);
+    expect(next[0]?.modeToNext).toBe('walk');
+  });
+});
+
+function course(overrides: Partial<Course> = {}): Course {
+  return {
+    id: 'c1',
+    title: '원본 코스',
+    startDate: '2026-09-01',
+    partySize: 2,
+    isTemplate: false,
+    createdAt: '',
+    updatedAt: '',
+    days: [
+      {
+        id: 'd1',
+        date: '2026-09-01',
+        startTime: '09:00',
+        anchorPlaceId: 'stay1',
+        blocks: [
+          { id: 'b1', type: 'place', placeId: 'p1', stayMin: 60, modeToNext: 'car', done: true, doneAt: 'x' },
+          { id: 'b2', type: 'free', label: '휴식', stayMin: 30 },
+        ],
+      },
+    ],
+    ...overrides,
+  };
+}
+
+describe('createTemplateFrom', () => {
+  it('장소는 유지하고 실행 상태(done/doneAt)는 지운다', () => {
+    const template = createTemplateFrom(course(), '내 템플릿');
+    expect(template.isTemplate).toBe(true);
+    expect(template.title).toBe('내 템플릿');
+    expect(template.days[0]?.blocks[0]?.placeId).toBe('p1');
+    expect(template.days[0]?.blocks[0]?.done).toBeUndefined();
+  });
+});
+
+describe('instantiateFromTemplate', () => {
+  it('구조(체류시간·이동수단·라벨)는 유지하고 장소는 빈 슬롯으로 만든다', () => {
+    const template = { ...course(), isTemplate: true };
+    const next = instantiateFromTemplate(template, {
+      title: '새 코스',
+      startDate: '2026-10-01',
+      partySize: 3,
+    });
+    expect(next.title).toBe('새 코스');
+    expect(next.startDate).toBe('2026-10-01');
+    expect(next.partySize).toBe(3);
+    const placeBlock = next.days[0]?.blocks[0];
+    expect(placeBlock?.placeId).toBeUndefined();
+    expect(placeBlock?.stayMin).toBe(60);
+    expect(placeBlock?.modeToNext).toBe('car');
+    const freeBlock = next.days[0]?.blocks[1];
+    expect(freeBlock?.label).toBe('휴식');
+    expect(next.days[0]?.anchorPlaceId).toBeUndefined();
   });
 });

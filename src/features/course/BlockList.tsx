@@ -38,6 +38,7 @@ interface BlockListProps {
   otherDays?: CourseDay[];
   onMoveToDay?: (blockId: string, targetDayId: string) => void;
   onSwapPlace?: (blockId: string, replacement: Place) => void;
+  onFillSlot?: (blockId: string, replacement: Place) => void;
 }
 
 export function BlockList({
@@ -53,6 +54,7 @@ export function BlockList({
   otherDays,
   onMoveToDay,
   onSwapPlace,
+  onFillSlot,
 }: BlockListProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -88,6 +90,7 @@ export function BlockList({
                 onMoveToDay={onMoveToDay ? (dayId) => onMoveToDay(block.id, dayId) : undefined}
                 allPlaces={places}
                 onSwapPlace={onSwapPlace ? (replacement) => onSwapPlace(block.id, replacement) : undefined}
+                onFillSlot={onFillSlot ? (replacement) => onFillSlot(block.id, replacement) : undefined}
               />
               {i < blocks.length - 1 && <LegRow leg={legs.get(block.id)} mode={block.modeToNext} />}
             </div>
@@ -134,6 +137,7 @@ interface SortableBlockCardProps {
   onMoveToDay?: (dayId: string) => void;
   allPlaces: Place[];
   onSwapPlace?: (replacement: Place) => void;
+  onFillSlot?: (replacement: Place) => void;
 }
 
 function SortableBlockCard({
@@ -148,7 +152,9 @@ function SortableBlockCard({
   onMoveToDay,
   allPlaces,
   onSwapPlace,
+  onFillSlot,
 }: SortableBlockCardProps) {
+  const isEmptySlot = block.type === 'place' && !block.placeId;
   const [showPlanB, setShowPlanB] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: block.id,
@@ -170,8 +176,28 @@ function SortableBlockCard({
       />
       <div className={styles.main}>
         {block.type === 'place' ? (
-          <div className={styles.name}>{place?.name ?? '(삭제된 장소)'}</div>
+          <div className={styles.name}>
+            {isEmptySlot ? block.label || '이 자리에 넣을 장소' : (place?.name ?? '(삭제된 장소)')}
+          </div>
         ) : null}
+        {isEmptySlot && onFillSlot && (
+          <select
+            className={styles.stayInput}
+            value=""
+            style={{ width: 'auto' }}
+            onChange={(e) => {
+              const p = allPlaces.find((pl) => pl.id === e.target.value);
+              if (p) onFillSlot(p);
+            }}
+          >
+            <option value="">장소 선택…</option>
+            {allPlaces.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        )}
         {block.type === 'place' && latestVisit && <RevisitNote visit={latestVisit} />}
         {block.type === 'free' && (
           <input
@@ -192,6 +218,22 @@ function SortableBlockCard({
             onChange={(e) => onUpdate({ stayMin: Math.max(0, Number(e.target.value)) })}
           />
           <span>분</span>
+          {!isEmptySlot && (
+            <>
+              <input
+                type="number"
+                className={`${styles.stayInput} num`}
+                value={block.estCost ?? ''}
+                min={0}
+                step={1000}
+                placeholder="비용"
+                onChange={(e) =>
+                  onUpdate({ estCost: e.target.value ? Number(e.target.value) : undefined })
+                }
+              />
+              <span>원</span>
+            </>
+          )}
           {block.type === 'place' && (
             <div className={styles.modeButtons}>
               {(['car', 'transit', 'walk'] as const).map((m) => (
@@ -207,7 +249,7 @@ function SortableBlockCard({
             </div>
           )}
         </div>
-        {block.type === 'place' && onCheckoff && (
+        {block.type === 'place' && !isEmptySlot && onCheckoff && (
           <div className={styles.row}>
             <button
               type="button"

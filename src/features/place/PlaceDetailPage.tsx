@@ -53,6 +53,29 @@ export function PlaceDetailPage() {
           </a>
         )}
         {!place.businessHours && <div className={styles.badge}>영업시간 미확인</div>}
+        <div style={{ marginTop: 10, fontSize: 12, color: 'var(--ink-muted)' }}>
+          1인당 예상 비용{' '}
+          <input
+            type="number"
+            min={0}
+            step={1000}
+            defaultValue={place.estCostPerPerson ?? ''}
+            onBlur={(e) =>
+              void updatePlace(uid ?? '', place.id, {
+                estCostPerPerson: e.target.value ? Number(e.target.value) : undefined,
+              })
+            }
+            style={{
+              width: 90,
+              border: '1px solid var(--line)',
+              borderRadius: 6,
+              padding: '4px 8px',
+              fontSize: 12,
+              marginLeft: 4,
+            }}
+          />
+          원
+        </div>
         <div>
           <button
             type="button"

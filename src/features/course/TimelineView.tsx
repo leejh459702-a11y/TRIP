@@ -118,6 +118,12 @@ function TimelineSummary({ entries, totals }: Pick<TimelineViewProps, 'entries' 
     <div className={styles.summary}>
       총 이동 <span className="num">{totals.totalTravelMin}</span>분 · 체류{' '}
       <span className="num">{totals.totalStayMin}</span>분 · {totals.placeCount}곳
+      {totals.totalEstCost > 0 && (
+        <>
+          {' '}
+          · 예상 <span className="num">{totals.totalEstCost.toLocaleString()}</span>원
+        </>
+      )}
       {density && (
         <div className={styles.densityRow}>
           빡빡함: {density.dots} {density.label}

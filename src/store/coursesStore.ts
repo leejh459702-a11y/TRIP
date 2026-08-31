@@ -42,6 +42,8 @@ interface CoursesState {
   ) => Promise<string>;
   saveCourse: (uid: string, course: Course) => Promise<void>;
   deleteCourse: (uid: string, courseId: string) => Promise<void>;
+  /** B8: 템플릿 저장/인스턴스화 등, 이미 완성된 Course 데이터를 그대로 새 문서로 만듭니다. */
+  createFromObject: (uid: string, data: Omit<Course, 'id'>) => Promise<string>;
 }
 
 export const useCoursesStore = create<CoursesState>((set) => ({
@@ -88,5 +90,10 @@ export const useCoursesStore = create<CoursesState>((set) => ({
 
   deleteCourse: async (uid, courseId) => {
     await deleteDoc(doc(coursesCol(uid), courseId));
+  },
+
+  createFromObject: async (uid, data) => {
+    const ref = await addDoc(coursesCol(uid), data as Course);
+    return ref.id;
   },
 }));

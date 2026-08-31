@@ -1,10 +1,10 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { PageHeader } from '../../components/ui/PageHeader';
-import { EmptyState } from '../../components/ui/EmptyState';
 import { KakaoMapView, type MapMarkerSpec } from '../../components/map/KakaoMapView';
+import { SavedPlacesSection } from './SavedPlacesSection';
 import { useAuthStore } from '../../store/authStore';
 import { usePlacesStore } from '../../store/placesStore';
+import { useSettingsStore } from '../../store/settingsStore';
 import { searchKeyword, type KeywordSearchResult } from '../../services/kakao/local';
 import { CATEGORY_COLOR_VAR, CATEGORY_LABEL, guessCategory } from '../../domain/category';
 import styles from './MapPage.module.css';
@@ -14,6 +14,7 @@ export function MapPage() {
   const places = usePlacesStore((s) => s.places);
   const subscribe = usePlacesStore((s) => s.subscribe);
   const addFromSearch = usePlacesStore((s) => s.addFromSearch);
+  const subscribeSettings = useSettingsStore((s) => s.subscribe);
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<KeywordSearchResult[]>([]);
@@ -24,8 +25,12 @@ export function MapPage() {
   useEffect(() => {
     if (!uid) return;
     const unsub = subscribe(uid);
-    return unsub;
-  }, [uid, subscribe]);
+    const unsubSettings = subscribeSettings(uid);
+    return () => {
+      unsub();
+      unsubSettings();
+    };
+  }, [uid, subscribe, subscribeSettings]);
 
   const savedKakaoIds = useMemo(
     () => new Set(places.map((p) => p.kakaoPlaceId).filter(Boolean)),
@@ -123,27 +128,8 @@ export function MapPage() {
             );
           })}
         </div>
-      ) : places.length === 0 ? (
-        <EmptyState
-          title="저장된 장소가 없습니다"
-          description="지도에서 마음에 든 곳을 검색해서 저장해 보세요"
-        />
       ) : (
-        <div className={styles.results}>
-          <div className={styles.sectionLabel}>저장한 장소 {places.length}곳</div>
-          {places.map((p) => (
-            <Link className={styles.row} key={p.id} to={`/place/${p.id}`}>
-              <span className={styles.dot} style={{ background: CATEGORY_COLOR_VAR[p.category] }} />
-              <div className={styles.rowMain}>
-                <div className={styles.rowName}>{p.name}</div>
-                <div className={styles.rowMeta}>
-                  {CATEGORY_LABEL[p.category]} · {p.region.sido} {p.region.sigungu}
-                  {!p.businessHours && ' · 영업시간 미확인'}
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+        <SavedPlacesSection uid={uid} places={places} />
       )}
     </div>
   );

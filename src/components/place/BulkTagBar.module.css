@@ -1,0 +1,86 @@
+.bar {
+  position: sticky;
+  bottom: var(--tab-bar-height);
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  padding: 10px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.topRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.modeButtons {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.modeButton {
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.modeButtonActive {
+  background: var(--ink);
+  color: var(--surface);
+  border-color: var(--ink);
+}
+
+.doneButton {
+  border: none;
+  background: none;
+  color: var(--ink-muted);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.customRow {
+  display: flex;
+  gap: 6px;
+}
+
+.customInput {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.applyButton {
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  background: var(--ink);
+  color: var(--surface);
+  font-size: 12px;
+  cursor: pointer;
+}
