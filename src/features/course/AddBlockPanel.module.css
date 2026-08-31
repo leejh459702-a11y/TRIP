@@ -1,0 +1,47 @@
+.wrap {
+  padding: 12px 16px 24px;
+  border-top: 1px solid var(--line);
+}
+
+.label {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.freeButton {
+  margin-top: 10px;
+  border: 1px dashed var(--line);
+  background: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  width: 100%;
+}

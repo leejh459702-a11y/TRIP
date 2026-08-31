@@ -1,0 +1,66 @@
+.page {
+  padding-bottom: 24px;
+}
+
+.createBar {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  flex-wrap: wrap;
+}
+
+.input {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 13px;
+  background: var(--surface);
+}
+
+.titleInput {
+  flex: 1;
+  min-width: 140px;
+}
+
+.dateInput {
+  width: 140px;
+}
+
+.partyInput {
+  width: 64px;
+}
+
+.createButton {
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  background: var(--ink);
+  color: var(--surface);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.item {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.itemTitle {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.itemMeta {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}

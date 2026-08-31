@@ -1,0 +1,101 @@
+.wrap {
+  padding: 16px;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+}
+
+.timeCol {
+  width: 44px;
+  flex-shrink: 0;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+  padding-top: 2px;
+}
+
+.trackCol {
+  width: 16px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.stayBar {
+  width: 3px;
+  background: var(--ink);
+  border-radius: 2px;
+}
+
+.freeBar {
+  background: var(--free);
+}
+
+.legBar {
+  width: 0;
+  border-left: 2px dashed var(--ink-muted);
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 8px;
+}
+
+.blockHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.icon {
+  font-size: 14px;
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.stayLabel {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-left: auto;
+}
+
+.memo {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+.warning {
+  font-size: 12px;
+  color: var(--warn);
+  margin-top: 2px;
+}
+
+.legLabel {
+  font-size: 12px;
+  color: var(--ink-muted);
+  padding: 4px 0;
+}
+
+.legLabelWarn {
+  color: var(--warn);
+}
+
+.summary {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.densityRow {
+  margin-top: 6px;
+  font-size: 12px;
+}
