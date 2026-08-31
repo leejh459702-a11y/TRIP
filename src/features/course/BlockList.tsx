@@ -18,7 +18,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import type { Block, CourseDay, Place, RouteLeg, TravelMode, Visit } from '../../domain/types';
-import { CATEGORY_COLOR_VAR } from '../../domain/category';
+import { CATEGORY_COLOR_VAR, CATEGORY_ICON } from '../../domain/category';
 import { nearestPlaces } from '../../domain/course';
 import styles from './BlockList.module.css';
 
@@ -173,7 +173,9 @@ function SortableBlockCard({
       <span
         className={styles.dot}
         style={{ background: place ? CATEGORY_COLOR_VAR[place.category] : 'var(--free)' }}
-      />
+      >
+        {place ? CATEGORY_ICON[place.category] : '☁︎'}
+      </span>
       <div className={styles.main}>
         {block.type === 'place' ? (
           <div className={styles.name}>
@@ -279,7 +281,9 @@ function SortableBlockCard({
                     <span
                       className={styles.dot}
                       style={{ background: CATEGORY_COLOR_VAR[candidate.category] }}
-                    />
+                    >
+                      {CATEGORY_ICON[candidate.category]}
+                    </span>
                     <span className={styles.planBName}>{candidate.name}</span>
                     <button
                       type="button"

@@ -24,8 +24,8 @@
 }
 
 .stayBar {
-  width: 3px;
-  background: var(--ink);
+  width: 4px;
+  background: var(--brand);
   border-radius: 2px;
 }
 
@@ -55,7 +55,7 @@
 }
 
 .name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
 }
 

@@ -6,6 +6,8 @@
   background: var(--surface);
   border-top: 1px solid var(--line);
   flex-shrink: 0;
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+  gap: 4px;
 }
 
 .tab {
@@ -16,17 +18,26 @@
   justify-content: center;
   gap: 2px;
   text-decoration: none;
-  color: var(--ink-muted);
+  color: var(--ink-faint);
   font-size: 11px;
+  font-weight: 600;
   border: none;
   background: none;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
 .icon {
-  font-size: 20px;
+  font-size: 21px;
   line-height: 1;
+  transition: transform 0.15s ease;
 }
 
 .active {
-  color: var(--ink);
+  color: var(--brand-dark);
+  background: var(--brand-tint);
+}
+
+.active .icon {
+  transform: translateY(-1px) scale(1.05);
 }

@@ -6,7 +6,7 @@ import { BulkTagBar } from '../../components/place/BulkTagBar';
 import { useAuthStore } from '../../store/authStore';
 import { usePlacesStore } from '../../store/placesStore';
 import { useVisitsStore } from '../../store/visitsStore';
-import { CATEGORY_COLOR_VAR } from '../../domain/category';
+import { CATEGORY_COLOR_VAR, CATEGORY_ICON } from '../../domain/category';
 import { isOverdue, monthsSinceLastVisit, seasonalReminders } from '../../domain/reminders';
 import type { Place, Visit } from '../../domain/types';
 import styles from './RevisitPage.module.css';
@@ -160,7 +160,9 @@ export function RevisitPage() {
                 {selectMode && (
                   <input type="checkbox" checked={selectedIds.has(place.id)} readOnly />
                 )}
-                <span className={styles.dot} style={{ background: CATEGORY_COLOR_VAR[place.category] }} />
+                <span className={styles.dot} style={{ background: CATEGORY_COLOR_VAR[place.category] }}>
+                  {CATEGORY_ICON[place.category]}
+                </span>
                 <span className={styles.cardTitle}>{place.name}</span>
               </div>
               {!selectMode && (
@@ -223,7 +225,9 @@ function PlaceRoundsCard({
     <div className={styles.card} onClick={selectMode ? onToggleSelect : undefined}>
       <div className={styles.cardHead}>
         {selectMode && <input type="checkbox" checked={selected} readOnly />}
-        <span className={styles.dot} style={{ background: CATEGORY_COLOR_VAR[place.category] }} />
+        <span className={styles.dot} style={{ background: CATEGORY_COLOR_VAR[place.category] }}>
+          {CATEGORY_ICON[place.category]}
+        </span>
         <span className={styles.cardTitle}>{place.name}</span>
         <span className={styles.cardCount}>방문 {place.visitCount}회</span>
       </div>

@@ -10,10 +10,17 @@
 }
 
 .input {
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   border-radius: var(--radius-sm);
-  padding: 8px 10px;
+  padding: 9px 12px;
   font-size: 13px;
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--brand);
   background: var(--surface);
 }
 
@@ -32,18 +39,24 @@
 
 .createButton {
   border: none;
-  border-radius: var(--radius-sm);
-  padding: 8px 14px;
-  background: var(--ink);
-  color: var(--surface);
+  border-radius: var(--radius-pill);
+  padding: 9px 18px;
+  background: var(--brand);
+  color: #ffffff;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: var(--shadow-button);
+}
+
+.createButton:disabled {
+  opacity: 0.5;
+  box-shadow: none;
 }
 
 .sectionTitle {
-  padding: 16px 16px 4px;
-  font-size: 13px;
+  padding: 18px 16px 6px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--ink-muted);
 }
@@ -51,23 +64,27 @@
 .list {
   display: flex;
   flex-direction: column;
+  padding: 4px 16px 0;
+  gap: 8px;
 }
 
 .item {
   display: block;
   text-decoration: none;
   color: inherit;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--line);
+  padding: 16px;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
 }
 
 .itemTitle {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
 }
 
 .itemMeta {
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--ink-muted);
-  margin-top: 2px;
+  margin-top: 4px;
 }

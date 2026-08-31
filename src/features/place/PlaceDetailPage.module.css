@@ -32,8 +32,9 @@
   display: inline-block;
   margin-top: 8px;
   font-size: 11px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: var(--surface-2);
-  color: var(--ink-muted);
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--warn-tint);
+  color: var(--warn);
 }

@@ -1,75 +1,111 @@
 :root {
+  /* 브랜드 (배민 스타일 — 민트 포인트 + 화이트 베이스) */
+  --brand: #14c9b5;
+  --brand-dark: #0aa895;
+  --brand-tint: #e3fbf6;
+  --brand-ink: #063a34; /* 민트 배경 위 텍스트 */
+
   /* 표면 */
-  --canvas: #edeeea;
+  --canvas: #f7f8f6;
   --surface: #ffffff;
-  --surface-2: #f6f7f4;
-  --line: #dddfd8;
+  --surface-2: #f1f3f0;
+  --line: #e7e9e4;
 
   /* 텍스트 */
-  --ink: #1c1f1a;
-  --ink-muted: #6e7268;
+  --ink: #171915;
+  --ink-muted: #767a71;
+  --ink-faint: #a9ada3;
 
-  /* 카테고리 (지도 핀과 동일하게 사용) */
-  --cat-food: #c4562f;
-  --cat-cafe: #a07b3e;
-  --cat-stay: #3d6b8c;
-  --cat-activity: #5e8c4a;
-  --cat-etc: #8a7b9b;
+  /* 카테고리 (지도 핀 · 블록 카드 · 타임라인에서 동일하게 사용) */
+  --cat-food: #ff5a36;
+  --cat-cafe: #c98a3d;
+  --cat-stay: #2f80ed;
+  --cat-activity: #2fb170;
+  --cat-etc: #9b6fd1;
 
   /* 상태 */
-  --warn: #b3341f;
-  --ok: #3f7a4f;
-  --free: #9ba096;
+  --warn: #e6392b;
+  --warn-tint: #fde9e7;
+  --ok: #1fb273;
+  --ok-tint: #e3f8ee;
+  --free: #b9bdb4;
 
+  --font-display: 'Jua', 'Pretendard Variable', Pretendard, -apple-system, sans-serif;
   --font: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, sans-serif;
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --tab-bar-height: 56px;
+  --radius-sm: 10px;
+  --radius-md: 18px;
+  --radius-pill: 999px;
+  --tab-bar-height: 60px;
+
+  --shadow-card: 0 1px 2px rgba(23, 25, 21, 0.04), 0 10px 24px -12px rgba(23, 25, 21, 0.14);
+  --shadow-button: 0 6px 16px -4px rgba(20, 201, 181, 0.45);
 }
 
 /* prefers-color-scheme 자동 다크모드 (H5). 카테고리 색은 명도만 조정, 채도는 유지. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --canvas: #161813;
-    --surface: #1f221c;
-    --surface-2: #262a21;
-    --line: #35392e;
+    --brand: #2be0cb;
+    --brand-dark: #14c9b5;
+    --brand-tint: #0f2b28;
+    --brand-ink: #d9fff8;
 
-    --ink: #ece9e2;
-    --ink-muted: #9a9d92;
+    --canvas: #141613;
+    --surface: #1d201b;
+    --surface-2: #262a22;
+    --line: #383c33;
 
-    --cat-food: #e07750;
-    --cat-cafe: #c49a5c;
-    --cat-stay: #6a9dc4;
-    --cat-activity: #82b56c;
-    --cat-etc: #ac9bc4;
+    --ink: #f0f1ec;
+    --ink-muted: #a4a89c;
+    --ink-faint: #6c705f;
 
-    --warn: #e0573c;
-    --ok: #62b378;
-    --free: #6f7468;
+    --cat-food: #ff8266;
+    --cat-cafe: #dda158;
+    --cat-stay: #5c9dff;
+    --cat-activity: #55c68d;
+    --cat-etc: #b48fe6;
+
+    --warn: #ff6b5c;
+    --warn-tint: #3a1b17;
+    --ok: #3fd694;
+    --ok-tint: #123227;
+    --free: #6c705f;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2), 0 10px 24px -12px rgba(0, 0, 0, 0.5);
+    --shadow-button: 0 6px 16px -4px rgba(43, 224, 203, 0.35);
   }
 }
 
 /* 수동 토글 (H5) */
 :root[data-theme='dark'] {
-  --canvas: #161813;
-  --surface: #1f221c;
-  --surface-2: #262a21;
-  --line: #35392e;
+  --brand: #2be0cb;
+  --brand-dark: #14c9b5;
+  --brand-tint: #0f2b28;
+  --brand-ink: #d9fff8;
 
-  --ink: #ece9e2;
-  --ink-muted: #9a9d92;
+  --canvas: #141613;
+  --surface: #1d201b;
+  --surface-2: #262a22;
+  --line: #383c33;
 
-  --cat-food: #e07750;
-  --cat-cafe: #c49a5c;
-  --cat-stay: #6a9dc4;
-  --cat-activity: #82b56c;
-  --cat-etc: #ac9bc4;
+  --ink: #f0f1ec;
+  --ink-muted: #a4a89c;
+  --ink-faint: #6c705f;
 
-  --warn: #e0573c;
-  --ok: #62b378;
-  --free: #6f7468;
+  --cat-food: #ff8266;
+  --cat-cafe: #dda158;
+  --cat-stay: #5c9dff;
+  --cat-activity: #55c68d;
+  --cat-etc: #b48fe6;
+
+  --warn: #ff6b5c;
+  --warn-tint: #3a1b17;
+  --ok: #3fd694;
+  --ok-tint: #123227;
+  --free: #6c705f;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2), 0 10px 24px -12px rgba(0, 0, 0, 0.5);
+  --shadow-button: 0 6px 16px -4px rgba(43, 224, 203, 0.35);
 }
 
 .num {

@@ -250,32 +250,19 @@ function DelayStepper({
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
       <span style={{ color: 'var(--ink-muted)' }}>지연</span>
-      <button
-        type="button"
-        onClick={() => onChange(delayMin - 5)}
-        style={{ border: '1px solid var(--line)', borderRadius: 6, padding: '4px 10px' }}
-      >
+      <button type="button" onClick={() => onChange(delayMin - 5)} className="btn btn-ghost btn-sm">
         −5분
       </button>
       <span className="num" style={{ minWidth: 40, textAlign: 'center' }}>
         {delayMin}분
       </span>
-      <button
-        type="button"
-        onClick={() => onChange(delayMin + 5)}
-        style={{ border: '1px solid var(--line)', borderRadius: 6, padding: '4px 10px' }}
-      >
+      <button type="button" onClick={() => onChange(delayMin + 5)} className="btn btn-ghost btn-sm">
         +5분
       </button>
       <button
         type="button"
         onClick={() => onChange(Math.max(0, differenceInMinutes(new Date(), plannedArriveAt)))}
-        style={{
-          border: '1px solid var(--line)',
-          borderRadius: 6,
-          padding: '4px 10px',
-          color: 'var(--ink-muted)',
-        }}
+        className="btn btn-ghost btn-sm"
       >
         지금 기준
       </button>

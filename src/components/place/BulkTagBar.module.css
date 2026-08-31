@@ -24,18 +24,20 @@
 }
 
 .modeButton {
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   background: var(--surface-2);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 4px 10px;
   font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
   cursor: pointer;
 }
 
 .modeButtonActive {
-  background: var(--ink);
-  color: var(--surface);
-  border-color: var(--ink);
+  background: var(--brand);
+  color: #ffffff;
+  border-color: var(--brand);
 }
 
 .doneButton {
@@ -77,10 +79,11 @@
 
 .applyButton {
   border: none;
-  border-radius: var(--radius-sm);
-  padding: 6px 12px;
-  background: var(--ink);
-  color: var(--surface);
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  background: var(--brand);
+  color: #ffffff;
   font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
 }

@@ -67,11 +67,13 @@ export function PlaceDetailPage() {
             }
             style={{
               width: 90,
-              border: '1px solid var(--line)',
-              borderRadius: 6,
-              padding: '4px 8px',
+              border: '1.5px solid var(--line)',
+              borderRadius: 'var(--radius-sm)',
+              padding: '5px 8px',
               fontSize: 12,
               marginLeft: 4,
+              background: 'var(--surface-2)',
+              color: 'var(--ink)',
             }}
           />
           원
@@ -80,15 +82,8 @@ export function PlaceDetailPage() {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            style={{
-              marginTop: 12,
-              border: '1px solid var(--line)',
-              background: 'var(--surface)',
-              borderRadius: 'var(--radius-sm)',
-              padding: '6px 12px',
-              fontSize: 12,
-              cursor: 'pointer',
-            }}
+            className="btn btn-secondary btn-sm"
+            style={{ marginTop: 12 }}
           >
             ← 뒤로
           </button>

@@ -17,21 +17,24 @@
 }
 
 .nowName {
+  font-family: var(--font-display);
   font-size: 30px;
-  font-weight: 800;
+  font-weight: 400;
   line-height: 1.25;
 }
 
 .countdown {
   font-size: 16px;
-  color: var(--warn);
+  font-weight: 700;
+  color: var(--brand-dark);
 }
 
 .nextCard {
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: none;
   border-radius: var(--radius-md);
-  padding: 14px;
+  box-shadow: var(--shadow-card);
+  padding: 16px;
 }
 
 .nextLabel {
@@ -57,23 +60,25 @@
 .primaryButton {
   flex: 1;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
   padding: 20px 0;
-  background: var(--ink);
-  color: var(--surface);
+  background: var(--brand);
+  color: #ffffff;
   font-size: 17px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: var(--shadow-button);
 }
 
 .secondaryButton {
   flex: 1;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-pill);
   padding: 20px 0;
   background: var(--surface);
+  color: var(--ink);
   font-size: 17px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
 }
 

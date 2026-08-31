@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: flex-end;
   z-index: 50;
@@ -10,24 +10,27 @@
 .sheet {
   background: var(--surface);
   width: 100%;
-  border-radius: 16px 16px 0 0;
-  padding: 20px 16px 28px;
+  border-radius: 24px 24px 0 0;
+  padding: 22px 18px 30px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   max-height: 80vh;
   overflow-y: auto;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .title {
-  font-size: 15px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 400;
 }
 
 .sectionLabel {
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--ink-muted);
-  font-weight: 600;
+  font-weight: 700;
+  margin-bottom: 6px;
 }
 
 .revisitRow {
@@ -37,18 +40,20 @@
 
 .revisitButton {
   flex: 1;
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   background: var(--surface-2);
   border-radius: var(--radius-sm);
-  padding: 10px 0;
-  font-size: 13px;
+  padding: 11px 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
   cursor: pointer;
 }
 
 .revisitActive {
-  background: var(--ink);
-  color: var(--surface);
-  border-color: var(--ink);
+  background: var(--brand);
+  color: #ffffff;
+  border-color: var(--brand);
 }
 
 .chipRow {
@@ -58,25 +63,35 @@
 }
 
 .chip {
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   background: var(--surface-2);
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 12px;
+  border-radius: var(--radius-pill);
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
   cursor: pointer;
 }
 
 .chipActive {
-  background: var(--ink);
-  color: var(--surface);
-  border-color: var(--ink);
+  background: var(--brand);
+  color: #ffffff;
+  border-color: var(--brand);
 }
 
 .memoInput {
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  font-size: 13px;
+  padding: 11px 14px;
+  font-size: 13.5px;
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.memoInput:focus {
+  outline: none;
+  border-color: var(--brand);
+  background: var(--surface);
 }
 
 .actions {
@@ -88,21 +103,23 @@
 .saveButton {
   flex: 1;
   border: none;
-  border-radius: var(--radius-sm);
-  padding: 12px 0;
-  background: var(--ink);
-  color: var(--surface);
-  font-size: 14px;
+  border-radius: var(--radius-pill);
+  padding: 13px 0;
+  background: var(--brand);
+  color: #ffffff;
+  font-size: 14.5px;
   font-weight: 700;
   cursor: pointer;
+  box-shadow: var(--shadow-button);
 }
 
 .skipButton {
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   background: none;
-  border-radius: var(--radius-sm);
-  padding: 12px 16px;
-  font-size: 13px;
+  border-radius: var(--radius-pill);
+  padding: 13px 18px;
+  font-size: 13.5px;
+  font-weight: 700;
   color: var(--ink-muted);
   cursor: pointer;
 }

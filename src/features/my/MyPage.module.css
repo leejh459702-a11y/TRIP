@@ -1,5 +1,5 @@
 .section {
-  padding: 16px;
+  padding: 18px 16px;
   border-bottom: 1px solid var(--line);
 }
 
@@ -17,27 +17,30 @@
 
 .themeButton {
   flex: 1;
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   background: var(--surface);
-  border-radius: var(--radius-sm);
-  padding: 8px 0;
-  font-size: 12px;
+  border-radius: var(--radius-pill);
+  padding: 9px 0;
+  font-size: 12.5px;
+  font-weight: 600;
   color: var(--ink-muted);
   cursor: pointer;
 }
 
 .themeButtonActive {
-  background: var(--ink);
-  color: var(--surface);
-  border-color: var(--ink);
+  background: var(--brand-tint);
+  color: var(--brand-dark);
+  border-color: var(--brand-tint);
 }
 
 .linkButton {
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   background: var(--surface);
-  border-radius: var(--radius-sm);
-  padding: 8px 14px;
-  font-size: 12px;
+  border-radius: var(--radius-pill);
+  padding: 9px 16px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
   cursor: pointer;
 }
 

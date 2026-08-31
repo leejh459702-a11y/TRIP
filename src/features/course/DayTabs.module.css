@@ -7,29 +7,31 @@
 
 .tab {
   flex-shrink: 0;
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   background: var(--surface);
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 12px;
+  border-radius: var(--radius-pill);
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 700;
   cursor: pointer;
   color: var(--ink-muted);
   white-space: nowrap;
 }
 
 .tabActive {
-  background: var(--ink);
-  color: var(--surface);
-  border-color: var(--ink);
+  background: var(--brand-tint);
+  color: var(--brand-dark);
+  border-color: var(--brand-tint);
 }
 
 .addButton {
   flex-shrink: 0;
-  border: 1px dashed var(--line);
+  border: 1.5px dashed var(--line);
   background: none;
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 12px;
+  border-radius: var(--radius-pill);
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 700;
   color: var(--ink-muted);
   cursor: pointer;
 }

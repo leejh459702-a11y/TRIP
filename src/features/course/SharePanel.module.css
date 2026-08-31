@@ -7,26 +7,29 @@
 }
 
 .button {
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   background: var(--surface);
-  border-radius: var(--radius-sm);
-  padding: 6px 12px;
-  font-size: 12px;
+  border-radius: var(--radius-pill);
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink);
   cursor: pointer;
 }
 
 .linkBox {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   background: var(--surface-2);
-  border-radius: var(--radius-sm);
-  padding: 6px 10px;
-  font-size: 12px;
+  border-radius: var(--radius-pill);
+  padding: 7px 6px 7px 14px;
+  font-size: 12.5px;
 }
 
 .linkText {
-  color: var(--cat-stay);
+  color: var(--brand-dark);
+  font-weight: 600;
   max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;

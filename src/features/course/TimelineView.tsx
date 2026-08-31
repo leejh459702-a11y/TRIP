@@ -2,16 +2,10 @@ import { format } from 'date-fns';
 import type { Place, TimelineEntry, TravelMode } from '../../domain/types';
 import type { TimelineTotals } from '../../domain/timeline';
 import { computeDensity, tooManyPlacesNotice } from '../../domain/density';
+import { CATEGORY_ICON } from '../../domain/category';
 import styles from './TimelineView.module.css';
 
 const MODE_ICON: Record<TravelMode, string> = { car: '🚗', transit: '🚌', walk: '🚶' };
-const CATEGORY_ICON: Record<Place['category'], string> = {
-  food: '🍜',
-  cafe: '☕',
-  stay: '🏨',
-  activity: '🏛',
-  etc: '📍',
-};
 
 const MIN_BLOCK_HEIGHT = 44;
 const PX_PER_MIN = 0.8;

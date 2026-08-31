@@ -26,6 +26,15 @@ export const CATEGORY_COLOR_VAR: Record<Category, string> = {
   etc: 'var(--cat-etc)',
 };
 
+/** 카테고리 아이콘. 색과 마찬가지로 화면 전체에서 동일하게 사용합니다. */
+export const CATEGORY_ICON: Record<Category, string> = {
+  food: '🍜',
+  cafe: '☕',
+  stay: '🏨',
+  activity: '🏛',
+  etc: '📍',
+};
+
 /** 카카오 category_group_name 원본 문자열을 앱 Category로 매핑합니다. */
 export function guessCategory(kakaoCategoryGroupName: string): Category {
   if (kakaoCategoryGroupName.includes('음식')) return 'food';

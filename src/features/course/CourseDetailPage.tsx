@@ -331,34 +331,11 @@ export function CourseDetailPage() {
         onCreate={handleCreateShareLink}
         onRevoke={handleRevokeShareLink}
       />
-      <div style={{ padding: '0 16px 12px' }}>
-        <button
-          type="button"
-          onClick={handleExportIcs}
-          style={{
-            border: '1px solid var(--line)',
-            background: 'var(--surface)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '6px 12px',
-            fontSize: 12,
-            cursor: 'pointer',
-          }}
-        >
+      <div style={{ padding: '0 16px 12px', display: 'flex', gap: 6 }}>
+        <button type="button" onClick={handleExportIcs} className="btn btn-secondary btn-sm">
           캘린더로 내보내기 (.ics)
         </button>
-        <button
-          type="button"
-          onClick={handleSaveAsTemplate}
-          style={{
-            border: '1px solid var(--line)',
-            background: 'var(--surface)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '6px 12px',
-            fontSize: 12,
-            cursor: 'pointer',
-            marginLeft: 6,
-          }}
-        >
+        <button type="button" onClick={handleSaveAsTemplate} className="btn btn-secondary btn-sm">
           템플릿으로 저장
         </button>
       </div>

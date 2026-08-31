@@ -29,14 +29,7 @@ export function ExternalMapButton({ blocks, places }: ExternalMapButtonProps) {
           key={app}
           type="button"
           onClick={() => openDeepLink(app, points)}
-          style={{
-            border: '1px solid var(--line)',
-            background: 'var(--surface)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '6px 10px',
-            fontSize: 12,
-            cursor: 'pointer',
-          }}
+          className="btn btn-secondary btn-sm"
         >
           {label}
         </button>

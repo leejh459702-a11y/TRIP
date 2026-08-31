@@ -6,7 +6,7 @@ import { BulkTagBar } from '../../components/place/BulkTagBar';
 import { FilterPanel } from './FilterPanel';
 import { usePlacesStore } from '../../store/placesStore';
 import { useSettingsStore } from '../../store/settingsStore';
-import { CATEGORY_COLOR_VAR, CATEGORY_LABEL } from '../../domain/category';
+import { CATEGORY_COLOR_VAR, CATEGORY_ICON, CATEGORY_LABEL } from '../../domain/category';
 import { filterPlaces, isEmptyFilter, type PlaceFilter } from '../../domain/filter';
 import type { Place } from '../../domain/types';
 import styles from './MapPage.module.css';
@@ -128,7 +128,9 @@ export function SavedPlacesSection({ uid, places }: { uid?: string; places: Plac
               {selectMode && (
                 <input type="checkbox" checked={selected} readOnly className={styles.checkbox} />
               )}
-              <span className={styles.dot} style={{ background: CATEGORY_COLOR_VAR[p.category] }} />
+              <span className={styles.dot} style={{ background: CATEGORY_COLOR_VAR[p.category] }}>
+                {CATEGORY_ICON[p.category]}
+              </span>
               <div className={styles.rowMain}>
                 <div className={styles.rowName}>{p.name}</div>
                 <div className={styles.rowMeta}>
@@ -153,18 +155,7 @@ export function SavedPlacesSection({ uid, places }: { uid?: string; places: Plac
 
       {selectMode && selectedIds.size > 0 && uid && unvisitedOnly && (
         <div style={{ padding: '0 16px 16px' }}>
-          <button
-            onClick={handleCleanup}
-            style={{
-              border: '1px solid var(--warn)',
-              color: 'var(--warn)',
-              background: 'var(--surface)',
-              borderRadius: 'var(--radius-sm)',
-              padding: '8px 14px',
-              fontSize: 12,
-              cursor: 'pointer',
-            }}
-          >
+          <button onClick={handleCleanup} className="btn btn-sm btn-danger">
             선택한 {selectedIds.size}곳 이만 정리하기
           </button>
         </div>

@@ -6,7 +6,7 @@ import { useAuthStore } from '../../store/authStore';
 import { usePlacesStore } from '../../store/placesStore';
 import { useSettingsStore } from '../../store/settingsStore';
 import { searchKeyword, type KeywordSearchResult } from '../../services/kakao/local';
-import { CATEGORY_COLOR_VAR, CATEGORY_LABEL, guessCategory } from '../../domain/category';
+import { CATEGORY_COLOR_VAR, CATEGORY_ICON, CATEGORY_LABEL, guessCategory } from '../../domain/category';
 import styles from './MapPage.module.css';
 
 export function MapPage() {
@@ -110,7 +110,9 @@ export function MapPage() {
             const saved = savedKakaoIds.has(r.kakaoPlaceId);
             return (
               <div className={styles.row} key={r.kakaoPlaceId}>
-                <span className={styles.dot} style={{ background: CATEGORY_COLOR_VAR[category] }} />
+                <span className={styles.dot} style={{ background: CATEGORY_COLOR_VAR[category] }}>
+                  {CATEGORY_ICON[category]}
+                </span>
                 <div className={styles.rowMain}>
                   <div className={styles.rowName}>{r.name}</div>
                   <div className={styles.rowMeta}>
