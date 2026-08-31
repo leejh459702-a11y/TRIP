@@ -1,0 +1,78 @@
+:root {
+  /* 표면 */
+  --canvas: #edeeea;
+  --surface: #ffffff;
+  --surface-2: #f6f7f4;
+  --line: #dddfd8;
+
+  /* 텍스트 */
+  --ink: #1c1f1a;
+  --ink-muted: #6e7268;
+
+  /* 카테고리 (지도 핀과 동일하게 사용) */
+  --cat-food: #c4562f;
+  --cat-cafe: #a07b3e;
+  --cat-stay: #3d6b8c;
+  --cat-activity: #5e8c4a;
+  --cat-etc: #8a7b9b;
+
+  /* 상태 */
+  --warn: #b3341f;
+  --ok: #3f7a4f;
+  --free: #9ba096;
+
+  --font: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --tab-bar-height: 56px;
+}
+
+/* prefers-color-scheme 자동 다크모드 (H5). 카테고리 색은 명도만 조정, 채도는 유지. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --canvas: #161813;
+    --surface: #1f221c;
+    --surface-2: #262a21;
+    --line: #35392e;
+
+    --ink: #ece9e2;
+    --ink-muted: #9a9d92;
+
+    --cat-food: #e07750;
+    --cat-cafe: #c49a5c;
+    --cat-stay: #6a9dc4;
+    --cat-activity: #82b56c;
+    --cat-etc: #ac9bc4;
+
+    --warn: #e0573c;
+    --ok: #62b378;
+    --free: #6f7468;
+  }
+}
+
+/* 수동 토글 (H5) */
+:root[data-theme='dark'] {
+  --canvas: #161813;
+  --surface: #1f221c;
+  --surface-2: #262a21;
+  --line: #35392e;
+
+  --ink: #ece9e2;
+  --ink-muted: #9a9d92;
+
+  --cat-food: #e07750;
+  --cat-cafe: #c49a5c;
+  --cat-stay: #6a9dc4;
+  --cat-activity: #82b56c;
+  --cat-etc: #ac9bc4;
+
+  --warn: #e0573c;
+  --ok: #62b378;
+  --free: #6f7468;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}

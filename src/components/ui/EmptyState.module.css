@@ -1,0 +1,21 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--ink-muted);
+}
+
+.title {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.desc {
+  font-size: 13px;
+  max-width: 280px;
+}
