@@ -15,7 +15,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { Block, Place, RouteLeg, TravelMode } from '../../domain/types';
+import { format } from 'date-fns';
+import type { Block, Place, RouteLeg, TravelMode, Visit } from '../../domain/types';
 import { CATEGORY_COLOR_VAR } from '../../domain/category';
 import styles from './BlockList.module.css';
 
@@ -29,6 +30,9 @@ interface BlockListProps {
   onReorder: (nextBlocks: Block[]) => void;
   onUpdateBlock: (blockId: string, patch: Partial<Block>) => void;
   onRemoveBlock: (blockId: string) => void;
+  onCheckoff?: (blockId: string) => void;
+  recordedPlaceIds?: ReadonlySet<string>;
+  latestVisitByPlaceId?: ReadonlyMap<string, Visit>;
 }
 
 export function BlockList({
@@ -38,6 +42,9 @@ export function BlockList({
   onReorder,
   onUpdateBlock,
   onRemoveBlock,
+  onCheckoff,
+  recordedPlaceIds,
+  latestVisitByPlaceId,
 }: BlockListProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -66,6 +73,9 @@ export function BlockList({
                 place={block.placeId ? placeById.get(block.placeId) : undefined}
                 onUpdate={(patch) => onUpdateBlock(block.id, patch)}
                 onRemove={() => onRemoveBlock(block.id)}
+                onCheckoff={onCheckoff ? () => onCheckoff(block.id) : undefined}
+                recorded={block.placeId ? recordedPlaceIds?.has(block.placeId) : undefined}
+                latestVisit={block.placeId ? latestVisitByPlaceId?.get(block.placeId) : undefined}
               />
               {i < blocks.length - 1 && <LegRow leg={legs.get(block.id)} mode={block.modeToNext} />}
             </div>
@@ -73,6 +83,19 @@ export function BlockList({
         </div>
       </SortableContext>
     </DndContext>
+  );
+}
+
+/** E1: 코스에 장소를 추가하면 그 장소의 마지막 방문 기록을 블록 카드에 자동 표시합니다. */
+function RevisitNote({ visit }: { visit: Visit }) {
+  const parts = [format(new Date(visit.visitedAt), 'yyyy.MM')];
+  if (visit.companions.length > 0) parts.push(visit.companions.join(', '));
+  if (visit.auto.stayMin != null) parts.push(`체류 ${visit.auto.stayMin}분`);
+  return (
+    <div className={styles.revisitNote}>
+      <div>ⓘ 지난 방문 {parts.join(' · ')}</div>
+      {visit.memo && <div>&ldquo;{visit.memo}&rdquo;</div>}
+    </div>
   );
 }
 
@@ -92,9 +115,20 @@ interface SortableBlockCardProps {
   place?: Place;
   onUpdate: (patch: Partial<Block>) => void;
   onRemove: () => void;
+  onCheckoff?: () => void;
+  recorded?: boolean;
+  latestVisit?: Visit;
 }
 
-function SortableBlockCard({ block, place, onUpdate, onRemove }: SortableBlockCardProps) {
+function SortableBlockCard({
+  block,
+  place,
+  onUpdate,
+  onRemove,
+  onCheckoff,
+  recorded,
+  latestVisit,
+}: SortableBlockCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: block.id,
   });
@@ -116,7 +150,9 @@ function SortableBlockCard({ block, place, onUpdate, onRemove }: SortableBlockCa
       <div className={styles.main}>
         {block.type === 'place' ? (
           <div className={styles.name}>{place?.name ?? '(삭제된 장소)'}</div>
-        ) : (
+        ) : null}
+        {block.type === 'place' && latestVisit && <RevisitNote visit={latestVisit} />}
+        {block.type === 'free' && (
           <input
             className={styles.freeLabelInput}
             value={block.label ?? ''}
@@ -150,6 +186,20 @@ function SortableBlockCard({ block, place, onUpdate, onRemove }: SortableBlockCa
             </div>
           )}
         </div>
+        {block.type === 'place' && onCheckoff && (
+          <div className={styles.row}>
+            <button
+              type="button"
+              className={`${styles.modeButton} ${block.done ? styles.modeButtonActive : ''}`}
+              onClick={onCheckoff}
+            >
+              {block.done ? '완료됨' : '여기 완료'}
+            </button>
+            {block.done && recorded === false && (
+              <span style={{ color: 'var(--warn)' }}>· 미기록</span>
+            )}
+          </div>
+        )}
       </div>
       <button className={styles.removeButton} onClick={onRemove} aria-label="블록 삭제">
         ✕

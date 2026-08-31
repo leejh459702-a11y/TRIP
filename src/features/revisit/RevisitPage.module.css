@@ -1,0 +1,76 @@
+.section {
+  padding: 4px 16px 8px;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 12px 0 8px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cardTitle {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.cardCount {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.roundRow {
+  font-size: 12px;
+  color: var(--ink-muted);
+  padding: 6px 0 0 18px;
+  border-top: 1px solid var(--line);
+  margin-top: 6px;
+  padding-top: 8px;
+}
+
+.roundRow + .roundRow {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 4px;
+}
+
+.roundMemo {
+  color: var(--ink);
+  margin-top: 2px;
+}
+
+.maybeActions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.actionButton {
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}

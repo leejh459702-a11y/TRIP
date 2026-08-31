@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import type { Place, TimelineEntry, TravelMode } from '../../domain/types';
 import type { TimelineTotals } from '../../domain/timeline';
+import { computeDensity, tooManyPlacesNotice } from '../../domain/density';
 import styles from './TimelineView.module.css';
 
 const MODE_ICON: Record<TravelMode, string> = { car: '🚗', transit: '🚌', walk: '🚶' };
@@ -33,6 +34,7 @@ export function TimelineView({ entries, totals, places }: TimelineViewProps) {
         const legHeight = entry.legToNext
           ? Math.max(16, entry.legToNext.durationMin * PX_PER_MIN)
           : 0;
+        const legIsLong = entry.warnings.some((w) => w.kind === 'longTransfer');
 
         return (
           <div key={entry.block.id}>
@@ -56,11 +58,16 @@ export function TimelineView({ entries, totals, places }: TimelineViewProps) {
                   </span>
                   <span className={`${styles.stayLabel} num`}>{entry.block.stayMin}분</span>
                 </div>
-                {entry.warnings.map((w, wi) => (
-                  <div key={wi} className={styles.warning}>
-                    ⚠️ {w.detail}
-                  </div>
-                ))}
+                {entry.block.type === 'place' && place && !place.businessHours && (
+                  <div className={styles.memo}>⏱ 영업시간 미확인</div>
+                )}
+                {entry.warnings
+                  .filter((w) => w.kind !== 'longTransfer')
+                  .map((w, wi) => (
+                    <div key={wi} className={styles.warning}>
+                      ⚠️ {w.detail}
+                    </div>
+                  ))}
               </div>
             </div>
 
@@ -71,10 +78,11 @@ export function TimelineView({ entries, totals, places }: TimelineViewProps) {
                   <div className={styles.legBar} style={{ height: legHeight }} />
                 </div>
                 <div className={styles.body}>
-                  <div className={styles.legLabel}>
+                  <div className={`${styles.legLabel} ${legIsLong ? styles.legLabelWarn : ''}`}>
                     {MODE_ICON[entry.legToNext.mode]}{' '}
                     <span className="num">{entry.legToNext.durationMin}분</span>
                     {entry.legToNext.transitSummary ? ` · ${entry.legToNext.transitSummary}` : ''}
+                    {legIsLong ? ' · 이동 김' : ''}
                   </div>
                 </div>
               </div>
@@ -83,10 +91,35 @@ export function TimelineView({ entries, totals, places }: TimelineViewProps) {
         );
       })}
 
-      <div className={styles.summary}>
-        총 이동 <span className="num">{totals.totalTravelMin}</span>분 · 체류{' '}
-        <span className="num">{totals.totalStayMin}</span>분 · {totals.placeCount}곳
-      </div>
+      <TimelineSummary entries={entries} totals={totals} />
+    </div>
+  );
+}
+
+function TimelineSummary({ entries, totals }: Pick<TimelineViewProps, 'entries' | 'totals'>) {
+  const density = entries[0] ? computeDensity(totals, entries[0].arriveAt) : null;
+  const notice = tooManyPlacesNotice(totals.placeCount);
+  const travelHeavier = totals.totalStayMin > 0 && totals.totalTravelMin > totals.totalStayMin;
+
+  return (
+    <div className={styles.summary}>
+      총 이동 <span className="num">{totals.totalTravelMin}</span>분 · 체류{' '}
+      <span className="num">{totals.totalStayMin}</span>분 · {totals.placeCount}곳
+      {density && (
+        <div className={styles.densityRow}>
+          빡빡함: {density.dots} {density.label}
+        </div>
+      )}
+      {notice && (
+        <div className={styles.densityRow} style={{ color: 'var(--warn)' }}>
+          {notice}
+        </div>
+      )}
+      {travelHeavier && (
+        <div className={styles.densityRow} style={{ color: 'var(--warn)' }}>
+          ⚠️ 오늘은 이동 시간이 체류 시간보다 깁니다
+        </div>
+      )}
     </div>
   );
 }

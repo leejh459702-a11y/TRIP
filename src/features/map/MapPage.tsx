@@ -1,4 +1,5 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { KakaoMapView, type MapMarkerSpec } from '../../components/map/KakaoMapView';
@@ -131,15 +132,16 @@ export function MapPage() {
         <div className={styles.results}>
           <div className={styles.sectionLabel}>저장한 장소 {places.length}곳</div>
           {places.map((p) => (
-            <div className={styles.row} key={p.id}>
+            <Link className={styles.row} key={p.id} to={`/place/${p.id}`}>
               <span className={styles.dot} style={{ background: CATEGORY_COLOR_VAR[p.category] }} />
               <div className={styles.rowMain}>
                 <div className={styles.rowName}>{p.name}</div>
                 <div className={styles.rowMeta}>
                   {CATEGORY_LABEL[p.category]} · {p.region.sido} {p.region.sigungu}
+                  {!p.businessHours && ' · 영업시간 미확인'}
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

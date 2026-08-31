@@ -39,6 +39,7 @@ interface PlacesState {
   removePlace: (uid: string, placeId: string) => Promise<void>;
   addTags: (uid: string, placeIds: string[], tags: string[]) => Promise<void>;
   removeTags: (uid: string, placeIds: string[], tags: string[]) => Promise<void>;
+  updatePlace: (uid: string, placeId: string, patch: Partial<Place>) => Promise<void>;
 }
 
 export const usePlacesStore = create<PlacesState>((set, get) => ({
@@ -111,5 +112,12 @@ export const usePlacesStore = create<PlacesState>((set, get) => ({
         });
       }),
     );
+  },
+
+  updatePlace: async (uid, placeId, patch) => {
+    await updateDoc(doc(placesCol(uid), placeId), {
+      ...patch,
+      updatedAt: new Date().toISOString(),
+    });
   },
 }));

@@ -48,6 +48,14 @@
   font-weight: 600;
 }
 
+.revisitNote {
+  font-size: 11px;
+  color: var(--ink-muted);
+  background: var(--surface-2);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
 .freeLabelInput {
   font-size: 14px;
   font-weight: 600;

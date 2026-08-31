@@ -1,10 +1,8 @@
-import type { Block, LatLng, Place, RouteLeg } from '../domain/types';
+import type { LatLng, Place, RouteLeg } from '../domain/types';
+import type { ResolvedBlock } from '../domain/timeline';
 import type { RoutingProvider } from './routing';
 
-export interface ResolvedBlock {
-  block: Block;
-  place?: Place; // type === 'place'일 때만 존재
-}
+export type { ResolvedBlock } from '../domain/timeline';
 
 /**
  * 하루치 블록 순서를 받아 실제 이동 구간(leg)을 계산합니다.

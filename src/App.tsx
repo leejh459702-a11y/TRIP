@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell';
 import { MapPage } from './features/map/MapPage';
+import { PlaceDetailPage } from './features/place/PlaceDetailPage';
 import { CourseListPage } from './features/course/CourseListPage';
 import { CourseDetailPage } from './features/course/CourseDetailPage';
 import { RevisitPage } from './features/revisit/RevisitPage';
@@ -17,6 +18,7 @@ export default function App() {
       <Route element={<AppShell />}>
         <Route index element={<Navigate to="/map" replace />} />
         <Route path="/map" element={<MapPage />} />
+        <Route path="/place/:placeId" element={<PlaceDetailPage />} />
         <Route path="/course" element={<CourseListPage />} />
         <Route path="/course/:courseId" element={<CourseDetailPage />} />
         <Route path="/revisit" element={<RevisitPage />} />
