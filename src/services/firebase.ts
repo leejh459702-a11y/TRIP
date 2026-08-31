@@ -26,8 +26,11 @@ export const auth = getAuth(app);
 export const storage = getStorage(app);
 
 // C3/H4: 오프라인에서도 조회·쓰기가 가능하도록 Firestore persistence 활성화 (여러 탭 지원).
+// ignoreUndefinedProperties: 앱 전반에서 선택적 필드를 `undefined`로 지우는 패턴을 쓰므로
+// (예: F1 링크 해제 시 shareToken: undefined) Firestore가 이를 에러 대신 "필드 없음"으로 처리하게 합니다.
 export const db: Firestore = initializeFirestore(app, {
   localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+  ignoreUndefinedProperties: true,
 });
 
 /** 익명 로그인. 이미 로그인되어 있으면 재사용합니다. */

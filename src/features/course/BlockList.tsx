@@ -16,8 +16,10 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { format } from 'date-fns';
-import type { Block, Place, RouteLeg, TravelMode, Visit } from '../../domain/types';
+import { useState } from 'react';
+import type { Block, CourseDay, Place, RouteLeg, TravelMode, Visit } from '../../domain/types';
 import { CATEGORY_COLOR_VAR } from '../../domain/category';
+import { nearestPlaces } from '../../domain/course';
 import styles from './BlockList.module.css';
 
 const MODE_LABEL: Record<TravelMode, string> = { car: '자동차', transit: '대중교통', walk: '도보' };
@@ -33,6 +35,9 @@ interface BlockListProps {
   onCheckoff?: (blockId: string) => void;
   recordedPlaceIds?: ReadonlySet<string>;
   latestVisitByPlaceId?: ReadonlyMap<string, Visit>;
+  otherDays?: CourseDay[];
+  onMoveToDay?: (blockId: string, targetDayId: string) => void;
+  onSwapPlace?: (blockId: string, replacement: Place) => void;
 }
 
 export function BlockList({
@@ -45,6 +50,9 @@ export function BlockList({
   onCheckoff,
   recordedPlaceIds,
   latestVisitByPlaceId,
+  otherDays,
+  onMoveToDay,
+  onSwapPlace,
 }: BlockListProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -76,6 +84,10 @@ export function BlockList({
                 onCheckoff={onCheckoff ? () => onCheckoff(block.id) : undefined}
                 recorded={block.placeId ? recordedPlaceIds?.has(block.placeId) : undefined}
                 latestVisit={block.placeId ? latestVisitByPlaceId?.get(block.placeId) : undefined}
+                otherDays={otherDays}
+                onMoveToDay={onMoveToDay ? (dayId) => onMoveToDay(block.id, dayId) : undefined}
+                allPlaces={places}
+                onSwapPlace={onSwapPlace ? (replacement) => onSwapPlace(block.id, replacement) : undefined}
               />
               {i < blocks.length - 1 && <LegRow leg={legs.get(block.id)} mode={block.modeToNext} />}
             </div>
@@ -118,6 +130,10 @@ interface SortableBlockCardProps {
   onCheckoff?: () => void;
   recorded?: boolean;
   latestVisit?: Visit;
+  otherDays?: CourseDay[];
+  onMoveToDay?: (dayId: string) => void;
+  allPlaces: Place[];
+  onSwapPlace?: (replacement: Place) => void;
 }
 
 function SortableBlockCard({
@@ -128,7 +144,12 @@ function SortableBlockCard({
   onCheckoff,
   recorded,
   latestVisit,
+  otherDays,
+  onMoveToDay,
+  allPlaces,
+  onSwapPlace,
 }: SortableBlockCardProps) {
+  const [showPlanB, setShowPlanB] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: block.id,
   });
@@ -199,6 +220,60 @@ function SortableBlockCard({
               <span style={{ color: 'var(--warn)' }}>· 미기록</span>
             )}
           </div>
+        )}
+        {block.type === 'place' && place && onSwapPlace && (
+          <>
+            <button
+              type="button"
+              className={styles.planBToggle}
+              onClick={() => setShowPlanB((v) => !v)}
+            >
+              {showPlanB ? '대체 후보 닫기' : 'Plan B 대체 후보'}
+            </button>
+            {showPlanB && (
+              <div className={styles.planBList}>
+                {nearestPlaces(place, allPlaces, 3).map((candidate) => (
+                  <div className={styles.planBRow} key={candidate.id}>
+                    <span
+                      className={styles.dot}
+                      style={{ background: CATEGORY_COLOR_VAR[candidate.category] }}
+                    />
+                    <span className={styles.planBName}>{candidate.name}</span>
+                    <button
+                      type="button"
+                      className={styles.planBSwap}
+                      onClick={() => {
+                        onSwapPlace(candidate);
+                        setShowPlanB(false);
+                      }}
+                    >
+                      여기로 교체
+                    </button>
+                  </div>
+                ))}
+                {nearestPlaces(place, allPlaces, 3).length === 0 && (
+                  <div style={{ fontSize: 12, color: 'var(--ink-muted)' }}>
+                    대체할 만한 저장된 장소가 없습니다
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+        {otherDays && otherDays.length > 0 && onMoveToDay && (
+          <select
+            className={styles.stayInput}
+            value=""
+            onChange={(e) => e.target.value && onMoveToDay(e.target.value)}
+            style={{ width: 'auto', marginTop: 6 }}
+          >
+            <option value="">다른 날로 이동…</option>
+            {otherDays.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.date}
+              </option>
+            ))}
+          </select>
         )}
       </div>
       <button className={styles.removeButton} onClick={onRemove} aria-label="블록 삭제">

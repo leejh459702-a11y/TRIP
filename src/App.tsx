@@ -8,6 +8,8 @@ import { RevisitPage } from './features/revisit/RevisitPage';
 import { LogPage } from './features/log/LogPage';
 import { MyPage } from './features/my/MyPage';
 import { SharePage } from './features/share/SharePage';
+import { LiveGate } from './features/live/LiveGate';
+import { LiveCoursePage } from './features/live/LiveCoursePage';
 
 export default function App() {
   return (
@@ -16,7 +18,8 @@ export default function App() {
       <Route path="/s/:token" element={<SharePage />} />
 
       <Route element={<AppShell />}>
-        <Route index element={<Navigate to="/map" replace />} />
+        <Route index element={<LiveGate />} />
+        <Route path="/live" element={<LiveCoursePage />} />
         <Route path="/map" element={<MapPage />} />
         <Route path="/place/:placeId" element={<PlaceDetailPage />} />
         <Route path="/course" element={<CourseListPage />} />

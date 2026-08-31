@@ -1,7 +1,13 @@
-import type { Block, Place, TravelMode } from './types';
+import { haversineM } from './geo';
+import type { Block, Course, CourseDay, Place, TravelMode } from './types';
 
 function newId(): string {
   return crypto.randomUUID();
+}
+
+/** B9: 새 날짜를 추가합니다. */
+export function createDay(date: string, startTime = '09:00'): CourseDay {
+  return { id: newId(), date, startTime, blocks: [] };
 }
 
 export function createPlaceBlock(place: Place): Block {
@@ -46,4 +52,35 @@ export function updateBlockStayMin(blocks: Block[], blockId: string, stayMin: nu
 
 export function updateBlockMode(blocks: Block[], blockId: string, mode: TravelMode): Block[] {
   return updateBlock(blocks, blockId, { modeToNext: mode });
+}
+
+/** B3: target과 가까운 순으로 정렬한 대체 후보(최대 limit개, target 자신 제외)를 반환합니다. */
+export function nearestPlaces(target: Place, candidates: readonly Place[], limit = 3): Place[] {
+  return candidates
+    .filter((p) => p.id !== target.id)
+    .map((p) => ({ p, dist: haversineM(target, p) }))
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, limit)
+    .map(({ p }) => p);
+}
+
+/** B3: 블록의 장소를 대체 장소로 교체합니다 (체류시간은 새 장소의 기본값으로 초기화). */
+export function swapBlockPlace(blocks: Block[], blockId: string, replacement: Place): Block[] {
+  return blocks.map((b) =>
+    b.id === blockId
+      ? { ...b, placeId: replacement.id, stayMin: replacement.defaultStayMin }
+      : b,
+  );
+}
+
+/** C1: 주어진 날짜(yyyy-MM-dd)와 일치하는 첫 코스/날짜 조합을 찾습니다. */
+export function findCourseDayForDate(
+  courses: readonly Course[],
+  dateISO: string,
+): { course: Course; day: CourseDay } | undefined {
+  for (const course of courses) {
+    const day = course.days.find((d) => d.date === dateISO);
+    if (day) return { course, day };
+  }
+  return undefined;
 }

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { buildKakaoMapUrl, buildNaverMapUrl, buildTmapUrl } from './deeplink';
+import {
+  buildKakaoMapUrl,
+  buildKakaoWebDirectionsUrl,
+  buildKakaoWebMapUrl,
+  buildNaverMapUrl,
+  buildTmapUrl,
+} from './deeplink';
 
 describe('buildNaverMapUrl', () => {
   it('4개 지점을 출발지+경유지2+도착지로 조합한다', () => {
@@ -35,5 +41,17 @@ describe('buildTmapUrl', () => {
       { name: 'B', lat: 3, lng: 4 },
     ]);
     expect(url).toContain('rGoName=B');
+  });
+});
+
+describe('buildKakaoWebMapUrl / buildKakaoWebDirectionsUrl', () => {
+  it('앱 설치 없이 여는 웹 링크를 생성한다 (F1)', () => {
+    const point = { name: '테라로사', lat: 37.5, lng: 127.1 };
+    expect(buildKakaoWebMapUrl(point)).toBe(
+      'https://map.kakao.com/link/map/%ED%85%8C%EB%9D%BC%EB%A1%9C%EC%82%AC,37.5,127.1',
+    );
+    expect(buildKakaoWebDirectionsUrl(point)).toBe(
+      'https://map.kakao.com/link/to/%ED%85%8C%EB%9D%BC%EB%A1%9C%EC%82%AC,37.5,127.1',
+    );
   });
 });

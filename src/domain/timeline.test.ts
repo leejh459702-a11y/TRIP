@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeTimeline, type ResolvedBlock } from './timeline';
+import { computeTimeline, newWarningBlockIds, withoutDelay, type ResolvedBlock } from './timeline';
 import type { Block, BusinessHours, Place, RouteLeg } from './types';
 
 function leg(durationMin: number): RouteLeg {
@@ -136,5 +136,55 @@ describe('computeTimeline', () => {
       longTransferThresholdMin: 40,
     });
     expect(entries[0]?.warnings.some((w) => w.kind === 'longTransfer')).toBe(false);
+  });
+
+  it('C2: delayMin이 설정된 블록부터 이후 모든 도착 시각이 밀린다', () => {
+    const blocks: Block[] = [
+      { id: 'a', type: 'place', placeId: 'p1', stayMin: 60 },
+      { id: 'b', type: 'place', placeId: 'p2', stayMin: 30, delayMin: 20 },
+      { id: 'c', type: 'place', placeId: 'p3', stayMin: 30 },
+    ];
+    const legs = new Map([
+      ['a', leg(20)],
+      ['b', leg(15)],
+    ]);
+    const { entries } = computeTimeline(day, resolve(blocks), legs);
+    // b: 원래 10:20 도착 -> +20분 지연 -> 10:40
+    expect(entries[1]?.arriveAt.toISOString()).toBe(new Date(2026, 8, 1, 10, 40).toISOString());
+    // c: b 출발(11:10) + 이동 15분 = 11:25 (지연이 그대로 이어짐)
+    expect(entries[2]?.arriveAt.toISOString()).toBe(new Date(2026, 8, 1, 11, 25).toISOString());
+  });
+
+  it('C2: 지연으로 새로 생긴 경고를 식별한다', () => {
+    const hours: BusinessHours = {
+      weekly: Array.from({ length: 7 }, () => ({ closed: false, open: '08:00', close: '10:15' })),
+    };
+    // 지연 없이는 09:00 도착이라 정상, 20분 지연되면 09:20 도착 -> 여전히 정상(마감 전)
+    // 라스트오더 없이 마감(10:15) 직전까지는 괜찮으므로, 더 큰 지연으로 마감을 넘겨봅니다.
+    const blocks: Block[] = [
+      { id: 'a', type: 'place', placeId: 'p1', stayMin: 30, delayMin: 90 }, // 09:00 -> 10:30 (마감 이후)
+    ];
+    const resolved = resolve(blocks, { p1: place('p1', { businessHours: hours }) });
+    const withDelay = computeTimeline(day, resolved, new Map());
+    const noDelay = computeTimeline(day, withoutDelay(resolved), new Map());
+
+    expect(noDelay.entries[0]?.warnings).toEqual([]);
+    expect(withDelay.entries[0]?.warnings.some((w) => w.kind === 'lastOrder')).toBe(true);
+
+    const ids = newWarningBlockIds(withDelay.entries, noDelay.entries);
+    expect(ids.has('a')).toBe(true);
+  });
+
+  it('C2: 이후 블록에서 delayMin이 갱신되면 그 시점부터 새 값으로 대체된다', () => {
+    const blocks: Block[] = [
+      { id: 'a', type: 'place', placeId: 'p1', stayMin: 60, delayMin: 30 },
+      { id: 'b', type: 'place', placeId: 'p2', stayMin: 30, delayMin: 10 },
+    ];
+    const legs = new Map([['a', leg(10)]]);
+    const { entries } = computeTimeline(day, resolve(blocks), legs);
+    // a: 09:00 + 30분 = 09:30
+    expect(entries[0]?.arriveAt.toISOString()).toBe(new Date(2026, 8, 1, 9, 30).toISOString());
+    // b: a 출발(10:30) + 이동 10분 = 10:40(30분 지연 기준) -> 새 delayMin 10으로 20분 당겨져 10:20
+    expect(entries[1]?.arriveAt.toISOString()).toBe(new Date(2026, 8, 1, 10, 20).toISOString());
   });
 });

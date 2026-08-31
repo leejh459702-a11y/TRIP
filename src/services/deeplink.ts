@@ -60,6 +60,33 @@ export function buildTmapUrl(points: DeepLinkPoint[]): string {
   return `tmap://route?${params.toString()}`;
 }
 
+/**
+ * 네이버지도 장소 보기 딥링크(경로 없이 단일 지점). 출발지가 없는 C1 "길찾기" 버튼처럼
+ * 현재 위치를 모를 때 사용 — 지도 앱을 열면 앱 자체에서 현재 위치 기준 길찾기를 제공합니다.
+ */
+export function buildNaverPlaceUrl(point: DeepLinkPoint): string {
+  const params = new URLSearchParams({
+    lat: String(point.lat),
+    lng: String(point.lng),
+    name: point.name,
+    appname: APP_SCHEME,
+  });
+  return `nmap://place?${params.toString()}`;
+}
+
+/**
+ * 카카오맵 웹 공유 링크(장소 상세). 앱 설치 없이 어떤 브라우저에서도 열립니다 —
+ * F1 공유 링크(카톡 인앱 브라우저 포함)에서 씁니다.
+ */
+export function buildKakaoWebMapUrl(point: DeepLinkPoint): string {
+  return `https://map.kakao.com/link/map/${encodeURIComponent(point.name)},${point.lat},${point.lng}`;
+}
+
+/** 카카오맵 웹 길찾기 링크(장소 하나로 길찾기, 앱 설치 없이 동작). */
+export function buildKakaoWebDirectionsUrl(point: DeepLinkPoint): string {
+  return `https://map.kakao.com/link/to/${encodeURIComponent(point.name)},${point.lat},${point.lng}`;
+}
+
 export type MapApp = 'naver' | 'kakao' | 'tmap';
 
 export function buildDeepLink(app: MapApp, points: DeepLinkPoint[]): string {

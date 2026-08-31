@@ -69,12 +69,18 @@ export function computeTimeline(
 ): TimelineResult {
   const longTransferMin = options.longTransferThresholdMin ?? DEFAULT_LONG_TRANSFER_MIN;
   let cursor = dayStartDate(day);
+  let appliedDelayMin = 0; // C2: cursor에 이미 반영된 누적 지연
   const entries: TimelineEntry[] = [];
   let totalTravelMin = 0;
   let totalStayMin = 0;
   let placeCount = 0;
 
   for (const { block, place } of blocks) {
+    // C2: 블록에 새 누적 지연이 보고되면 그 차이만큼 cursor를 한 번만 밀어줍니다.
+    if (block.delayMin != null && block.delayMin !== appliedDelayMin) {
+      cursor = addMinutes(cursor, block.delayMin - appliedDelayMin);
+      appliedDelayMin = block.delayMin;
+    }
     const arriveAt = cursor;
     const leaveAt = addMinutes(arriveAt, block.stayMin);
     const legToNext = legs.get(block.id);
@@ -97,4 +103,30 @@ export function computeTimeline(
   }
 
   return { entries, totals: { totalTravelMin, totalStayMin, placeCount } };
+}
+
+/** C2: delayMin을 제거한 비교용 블록 목록을 만듭니다 (지연 없었다면 어땠을지 계산용). */
+export function withoutDelay(blocks: readonly ResolvedBlock[]): ResolvedBlock[] {
+  return blocks.map(({ block, place }) =>
+    block.delayMin != null ? { block: { ...block, delayMin: undefined }, place } : { block, place },
+  );
+}
+
+/**
+ * C2: 지연을 반영한 결과와 반영하지 않은 결과를 비교해, 지연 때문에 "새로" 생긴
+ * 경고가 있는 블록 id 집합을 반환합니다. (UI에서 강조 표시용)
+ */
+export function newWarningBlockIds(
+  withDelayEntries: readonly TimelineEntry[],
+  withoutDelayEntries: readonly TimelineEntry[],
+): Set<string> {
+  const ids = new Set<string>();
+  for (let i = 0; i < withDelayEntries.length; i++) {
+    const a = withDelayEntries[i];
+    const b = withoutDelayEntries[i];
+    if (!a || !b) continue;
+    const baseKinds = new Set(b.warnings.map((w) => w.kind));
+    if (a.warnings.some((w) => !baseKinds.has(w.kind))) ids.add(a.block.id);
+  }
+  return ids;
 }

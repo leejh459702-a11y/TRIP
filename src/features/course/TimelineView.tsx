@@ -20,10 +20,12 @@ interface TimelineViewProps {
   entries: TimelineEntry[];
   totals: TimelineTotals;
   places: Place[];
+  /** C2: 지연 때문에 새로 발생한 경고가 있는 블록 id (강조 표시용). */
+  delayWarningBlockIds?: ReadonlySet<string>;
 }
 
 /** 읽기 전용 타임라인 뷰 (9절: 편집 불가가 존재 이유). */
-export function TimelineView({ entries, totals, places }: TimelineViewProps) {
+export function TimelineView({ entries, totals, places, delayWarningBlockIds }: TimelineViewProps) {
   const placeById = new Map(places.map((p) => [p.id, p]));
 
   return (
@@ -35,6 +37,7 @@ export function TimelineView({ entries, totals, places }: TimelineViewProps) {
           ? Math.max(16, entry.legToNext.durationMin * PX_PER_MIN)
           : 0;
         const legIsLong = entry.warnings.some((w) => w.kind === 'longTransfer');
+        const causedByDelay = delayWarningBlockIds?.has(entry.block.id);
 
         return (
           <div key={entry.block.id}>
@@ -58,14 +61,24 @@ export function TimelineView({ entries, totals, places }: TimelineViewProps) {
                   </span>
                   <span className={`${styles.stayLabel} num`}>{entry.block.stayMin}분</span>
                 </div>
+                {entry.block.delayMin != null && entry.block.delayMin !== 0 && (
+                  <div className={styles.memo}>
+                    ⏳ 지연 {entry.block.delayMin > 0 ? '+' : ''}
+                    {entry.block.delayMin}분 반영됨
+                  </div>
+                )}
                 {entry.block.type === 'place' && place && !place.businessHours && (
                   <div className={styles.memo}>⏱ 영업시간 미확인</div>
                 )}
                 {entry.warnings
                   .filter((w) => w.kind !== 'longTransfer')
                   .map((w, wi) => (
-                    <div key={wi} className={styles.warning}>
+                    <div
+                      key={wi}
+                      className={`${styles.warning} ${causedByDelay ? styles.warningDelay : ''}`}
+                    >
                       ⚠️ {w.detail}
+                      {causedByDelay ? ' · 지연으로 새로 발생' : ''}
                     </div>
                   ))}
               </div>

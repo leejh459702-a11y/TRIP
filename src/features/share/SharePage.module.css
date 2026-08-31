@@ -1,0 +1,112 @@
+.page {
+  min-height: 100%;
+  background: var(--canvas);
+  padding-bottom: 32px;
+}
+
+.header {
+  padding: 20px 16px 12px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.sub {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 4px;
+}
+
+.mapWrap {
+  height: 260px;
+}
+
+.dayTabs {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px 4px;
+  overflow-x: auto;
+}
+
+.dayTab {
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--ink-muted);
+}
+
+.dayTabActive {
+  background: var(--ink);
+  color: var(--surface);
+  border-color: var(--ink);
+}
+
+.list {
+  padding: 8px 16px 0;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.time {
+  width: 44px;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.meta {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+.links {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.linkButton {
+  font-size: 11px;
+  color: var(--cat-stay);
+  text-decoration: underline;
+}
+
+.centerMsg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+  padding: 24px;
+  gap: 8px;
+  color: var(--ink-muted);
+}
+
+.footer {
+  padding: 20px 16px 0;
+  font-size: 11px;
+  color: var(--ink-muted);
+  text-align: center;
+}

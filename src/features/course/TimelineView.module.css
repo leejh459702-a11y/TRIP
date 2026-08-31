@@ -77,6 +77,13 @@
   margin-top: 2px;
 }
 
+.warningDelay {
+  font-weight: 700;
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
 .legLabel {
   font-size: 12px;
   color: var(--ink-muted);

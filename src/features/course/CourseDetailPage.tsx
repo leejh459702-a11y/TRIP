@@ -1,27 +1,34 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { differenceInMinutes } from 'date-fns';
+import { addDays, differenceInMinutes, format } from 'date-fns';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { useAuthStore } from '../../store/authStore';
 import { usePlacesStore } from '../../store/placesStore';
 import { useCoursesStore } from '../../store/coursesStore';
 import { useVisitsStore } from '../../store/visitsStore';
-import type { Block, Course, RouteLeg } from '../../domain/types';
+import type { Block, Course, CourseDay, RouteLeg } from '../../domain/types';
 import {
+  createDay,
   createFreeBlock,
   createPlaceBlock,
   removeBlockById,
+  swapBlockPlace,
   updateBlock as patchBlock,
 } from '../../domain/course';
-import { computeTimeline, type ResolvedBlock } from '../../domain/timeline';
+import { computeTimeline, newWarningBlockIds, withoutDelay, type ResolvedBlock } from '../../domain/timeline';
+import { buildSharedSnapshot, generateShareToken } from '../../domain/share';
+import { generateIcs } from '../../domain/ics';
 import { getRoutingProvider } from '../../services/routing';
 import { computeLegsForDay } from '../../services/legs';
+import { publishShareSnapshot, revokeShareSnapshot } from '../../services/share';
 import { BlockList } from './BlockList';
 import { TimelineView } from './TimelineView';
 import { CourseMapView } from './CourseMapView';
 import { AddBlockPanel } from './AddBlockPanel';
 import { ExternalMapButton } from './ExternalMapButton';
 import { VisitEntrySheet, type VisitEntryValues } from './VisitEntrySheet';
+import { DayTabs } from './DayTabs';
+import { SharePanel } from './SharePanel';
 import styles from './CourseDetailPage.module.css';
 
 type ViewMode = 'block' | 'timeline' | 'map';
@@ -46,7 +53,8 @@ export function CourseDetailPage() {
   const recordVisit = useVisitsStore((s) => s.recordVisit);
 
   const [view, setView] = useState<ViewMode>('block');
-  const [legs, setLegs] = useState<Map<string, RouteLeg>>(new Map());
+  const [activeDayId, setActiveDayId] = useState<string | null>(null);
+  const [legsByDay, setLegsByDay] = useState<Map<string, Map<string, RouteLeg>>>(new Map());
   const [checkoffBlockId, setCheckoffBlockId] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -63,8 +71,9 @@ export function CourseDetailPage() {
   }, [uid, subscribePlaces, subscribeCourses, subscribeVisits]);
 
   const course = courses.find((c) => c.id === courseId);
-  const day = course?.days[0];
+  const day = course?.days.find((d) => d.id === activeDayId) ?? course?.days[0];
   const blocks = useMemo(() => day?.blocks ?? [], [day]);
+  const legs = (day && legsByDay.get(day.id)) || new Map<string, RouteLeg>();
 
   const placeById = useMemo(() => new Map(places.map((p) => [p.id, p])), [places]);
 
@@ -77,20 +86,30 @@ export function CourseDetailPage() {
     [blocks, placeById],
   );
 
+  // B9: 모든 날짜의 구간을 계산해 두어야 날짜별 요약(이동/체류/장소수)이 정확합니다.
   // H2 규칙 5: 드롭 완료 후 300ms 디바운스, 드래그 중에는 조회하지 않음.
   useEffect(() => {
-    if (!uid || !day) return;
+    if (!uid || !course) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       const provider = getRoutingProvider(uid);
-      computeLegsForDay(resolvedBlocks, provider)
-        .then(setLegs)
-        .catch(() => setLegs(new Map()));
+      Promise.all(
+        course.days.map(async (d) => {
+          const resolved: ResolvedBlock[] = d.blocks.map((b) => ({
+            block: b,
+            place: b.placeId ? placeById.get(b.placeId) : undefined,
+          }));
+          const dayLegs = await computeLegsForDay(resolved, provider).catch(
+            () => new Map<string, RouteLeg>(),
+          );
+          return [d.id, dayLegs] as const;
+        }),
+      ).then((entries) => setLegsByDay(new Map(entries)));
     }, 300);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [uid, day, resolvedBlocks]);
+  }, [uid, course, placeById]);
 
   // E1: 장소별 가장 최근 방문 기록 (코스 무관, 전체 방문 이력 중 최신).
   const latestVisitByPlaceId = useMemo(() => {
@@ -122,10 +141,83 @@ export function CourseDetailPage() {
     void saveCourse(uid, nextCourse);
   }
 
+  function patchDay(patch: Partial<CourseDay>) {
+    if (!uid || !course || !day) return;
+    const nextCourse: Course = {
+      ...course,
+      days: course.days.map((d) => (d.id === day.id ? { ...d, ...patch } : d)),
+    };
+    void saveCourse(uid, nextCourse);
+  }
+
+  function handleAddDay() {
+    if (!uid || !course) return;
+    const lastDay = course.days[course.days.length - 1];
+    const nextDate = lastDay ? format(addDays(new Date(lastDay.date), 1), 'yyyy-MM-dd') : course.startDate;
+    const newDay = createDay(nextDate);
+    void saveCourse(uid, { ...course, days: [...course.days, newDay] });
+    setActiveDayId(newDay.id);
+  }
+
+  function handleMoveBlockToDay(blockId: string, targetDayId: string) {
+    if (!uid || !course || !day || targetDayId === day.id) return;
+    const moving = blocks.find((b) => b.id === blockId);
+    if (!moving) return;
+    const nextCourse: Course = {
+      ...course,
+      days: course.days.map((d) => {
+        if (d.id === day.id) return { ...d, blocks: removeBlockById(d.blocks, blockId) };
+        if (d.id === targetDayId) return { ...d, blocks: [...d.blocks, moving] };
+        return d;
+      }),
+    };
+    void saveCourse(uid, nextCourse);
+  }
+
+  async function handleCreateShareLink() {
+    if (!uid || !course) return;
+    const token = generateShareToken();
+    const snapshot = buildSharedSnapshot(uid, course, legsByDay, (d) =>
+      d.blocks.map((b) => ({ block: b, place: b.placeId ? placeById.get(b.placeId) : undefined })),
+    );
+    await publishShareSnapshot(token, snapshot);
+    await saveCourse(uid, { ...course, shareToken: token });
+  }
+
+  async function handleRevokeShareLink() {
+    if (!uid || !course?.shareToken) return;
+    await revokeShareSnapshot(course.shareToken);
+    await saveCourse(uid, { ...course, shareToken: undefined });
+  }
+
+  function handleExportIcs() {
+    if (!course) return;
+    const days = course.days.map((d) => {
+      const resolved: ResolvedBlock[] = d.blocks.map((b) => ({
+        block: b,
+        place: b.placeId ? placeById.get(b.placeId) : undefined,
+      }));
+      const dayLegs = legsByDay.get(d.id) ?? new Map();
+      const { entries } = computeTimeline(d, resolved, dayLegs);
+      return { entries, resolved };
+    });
+    const ics = generateIcs(course.title, days);
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${course.title}.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const usedPlaceIds = new Set(blocks.filter((b) => b.placeId).map((b) => b.placeId));
   const candidatePlaces = places.filter((p) => !usedPlaceIds.has(p.id));
 
   const timeline = computeTimeline(day, resolvedBlocks, legs);
+  // C2: 지연 때문에 새로 생긴 경고를 강조하기 위해 지연 없는 버전과 비교합니다.
+  const timelineNoDelay = computeTimeline(day, withoutDelay(resolvedBlocks), legs);
+  const delayWarningBlockIds = newWarningBlockIds(timeline.entries, timelineNoDelay.entries);
 
   const recordedPlaceIds = new Set(
     visits.filter((v) => v.courseId === course.id).map((v) => v.placeId),
@@ -179,7 +271,52 @@ export function CourseDetailPage() {
         ))}
       </div>
 
+      <DayTabs
+        days={course.days}
+        activeDayId={day.id}
+        onSelectDay={setActiveDayId}
+        onAddDay={handleAddDay}
+      />
+
+      <div className={styles.anchorRow}>
+        <span>숙소</span>
+        <select
+          value={day.anchorPlaceId ?? ''}
+          onChange={(e) => patchDay({ anchorPlaceId: e.target.value || undefined })}
+        >
+          <option value="">지정 안 함</option>
+          {places
+            .filter((p) => p.category === 'stay')
+            .map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+        </select>
+      </div>
+
       <ExternalMapButton blocks={blocks} places={places} />
+      <SharePanel
+        shareToken={course.shareToken}
+        onCreate={handleCreateShareLink}
+        onRevoke={handleRevokeShareLink}
+      />
+      <div style={{ padding: '0 16px 12px' }}>
+        <button
+          type="button"
+          onClick={handleExportIcs}
+          style={{
+            border: '1px solid var(--line)',
+            background: 'var(--surface)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '6px 12px',
+            fontSize: 12,
+            cursor: 'pointer',
+          }}
+        >
+          캘린더로 내보내기 (.ics)
+        </button>
+      </div>
 
       {view === 'block' && (
         <div className={styles.split}>
@@ -197,6 +334,11 @@ export function CourseDetailPage() {
               onCheckoff={handleCheckoff}
               recordedPlaceIds={recordedPlaceIds}
               latestVisitByPlaceId={latestVisitByPlaceId}
+              otherDays={course.days.filter((d) => d.id !== day.id)}
+              onMoveToDay={handleMoveBlockToDay}
+              onSwapPlace={(blockId, replacement) =>
+                persistBlocks(swapBlockPlace(blocks, blockId, replacement))
+              }
             />
             <AddBlockPanel
               candidatePlaces={candidatePlaces}
@@ -209,7 +351,12 @@ export function CourseDetailPage() {
 
       {view === 'timeline' && (
         <div style={{ overflowY: 'auto', flex: 1 }}>
-          <TimelineView entries={timeline.entries} totals={timeline.totals} places={places} />
+          <TimelineView
+            entries={timeline.entries}
+            totals={timeline.totals}
+            places={places}
+            delayWarningBlockIds={delayWarningBlockIds}
+          />
         </div>
       )}
 

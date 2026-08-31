@@ -115,6 +115,47 @@
   color: var(--warn);
 }
 
+.planBToggle {
+  align-self: flex-start;
+  border: none;
+  background: none;
+  color: var(--ink-muted);
+  font-size: 11px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.planBList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+}
+
+.planBRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.planBName {
+  flex: 1;
+  font-size: 12px;
+}
+
+.planBSwap {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 .removeButton {
   border: none;
   background: none;
