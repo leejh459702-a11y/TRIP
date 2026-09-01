@@ -13,7 +13,11 @@ import {
 } from 'firebase/firestore';
 import { create } from 'zustand';
 import { db } from '../services/firebase';
+import { isDemoMode } from '../services/demoMode';
+import { DEMO_COURSES } from '../services/demoData';
 import type { Course, CourseDay } from '../domain/types';
+
+const demo = isDemoMode();
 
 const courseConverter: FirestoreDataConverter<Course> = {
   toFirestore: (course: Course): DocumentData => {
@@ -46,11 +50,15 @@ interface CoursesState {
   createFromObject: (uid: string, data: Omit<Course, 'id'>) => Promise<string>;
 }
 
-export const useCoursesStore = create<CoursesState>((set) => ({
+export const useCoursesStore = create<CoursesState>((set, get) => ({
   courses: [],
   loading: true,
 
   subscribe: (uid) => {
+    if (demo) {
+      set({ courses: DEMO_COURSES, loading: false });
+      return () => {};
+    }
     set({ loading: true });
     const q = query(coursesCol(uid), orderBy('startDate', 'desc'));
     return onSnapshot(
@@ -77,11 +85,25 @@ export const useCoursesStore = create<CoursesState>((set) => ({
       createdAt: now,
       updatedAt: now,
     };
+    if (demo) {
+      const id = newId();
+      set({ courses: [...get().courses, { ...course, id }] });
+      return id;
+    }
     const ref = await addDoc(coursesCol(uid), course as Course);
     return ref.id;
   },
 
   saveCourse: async (uid, course) => {
+    if (demo) {
+      const updated = { ...course, updatedAt: new Date().toISOString() };
+      set({
+        courses: get().courses.some((c) => c.id === course.id)
+          ? get().courses.map((c) => (c.id === course.id ? updated : c))
+          : [...get().courses, updated],
+      });
+      return;
+    }
     await setDoc(doc(coursesCol(uid), course.id), {
       ...course,
       updatedAt: new Date().toISOString(),
@@ -89,10 +111,19 @@ export const useCoursesStore = create<CoursesState>((set) => ({
   },
 
   deleteCourse: async (uid, courseId) => {
+    if (demo) {
+      set({ courses: get().courses.filter((c) => c.id !== courseId) });
+      return;
+    }
     await deleteDoc(doc(coursesCol(uid), courseId));
   },
 
   createFromObject: async (uid, data) => {
+    if (demo) {
+      const id = newId();
+      set({ courses: [...get().courses, { ...data, id }] });
+      return id;
+    }
     const ref = await addDoc(coursesCol(uid), data as Course);
     return ref.id;
   },

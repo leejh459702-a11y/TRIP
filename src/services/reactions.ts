@@ -1,6 +1,10 @@
 import { addDoc, collection, getDocs, type DocumentData, type FirestoreDataConverter } from 'firebase/firestore';
 import { db } from './firebase';
+import { isDemoMode } from './demoMode';
 import type { BlockReaction } from '../domain/reactions';
+
+// 체험 모드는 Firestore를 쓰지 않으므로, 반응을 세션 메모리에만 담아 둡니다.
+const demoReactions: BlockReaction[] = [];
 
 const reactionConverter: FirestoreDataConverter<BlockReaction> = {
   toFirestore: (r: BlockReaction): DocumentData => {
@@ -16,11 +20,16 @@ function reactionsCol(token: string) {
 
 /** F4: 익명 반응을 추가합니다. 로그인 불필요. */
 export async function addReaction(token: string, reaction: Omit<BlockReaction, 'id'>): Promise<void> {
+  if (isDemoMode()) {
+    demoReactions.push({ ...reaction, id: `demo-r${demoReactions.length + 1}` });
+    return;
+  }
   await addDoc(reactionsCol(token), reaction as BlockReaction);
 }
 
 /** F4: 원본 소유자만 조회할 수 있습니다(Firestore 규칙). */
 export async function fetchReactions(token: string): Promise<BlockReaction[]> {
+  if (isDemoMode()) return demoReactions;
   const snap = await getDocs(reactionsCol(token));
   return snap.docs.map((d) => d.data());
 }

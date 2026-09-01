@@ -1,7 +1,10 @@
 import { type Unsubscribe, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { create } from 'zustand';
 import { db } from '../services/firebase';
+import { isDemoMode } from '../services/demoMode';
 import type { PlaceFilter } from '../domain/filter';
+
+const demo = isDemoMode();
 
 export type ThemeMode = 'system' | 'light' | 'dark';
 
@@ -41,16 +44,25 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   ...DEFAULT_SETTINGS,
   loaded: false,
 
-  subscribe: (uid) =>
-    onSnapshot(settingsDoc(uid), (snap) => {
+  subscribe: (uid) => {
+    if (demo) {
+      set({ ...DEFAULT_SETTINGS, loaded: true });
+      return () => {};
+    }
+    return onSnapshot(settingsDoc(uid), (snap) => {
       if (snap.exists()) {
         set({ ...DEFAULT_SETTINGS, ...(snap.data() as Partial<AppSettings>), loaded: true });
       } else {
         set({ ...DEFAULT_SETTINGS, loaded: true });
       }
-    }),
+    });
+  },
 
   update: async (uid, patch) => {
+    if (demo) {
+      set({ ...get(), ...patch });
+      return;
+    }
     const next = { ...get(), ...patch };
     await setDoc(settingsDoc(uid), {
       theme: next.theme,

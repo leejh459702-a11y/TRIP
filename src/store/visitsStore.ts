@@ -13,8 +13,12 @@ import {
 } from 'firebase/firestore';
 import { create } from 'zustand';
 import { db } from '../services/firebase';
+import { isDemoMode } from '../services/demoMode';
+import { DEMO_VISITS } from '../services/demoData';
 import type { Revisit, Visit } from '../domain/types';
 import { computeVisitAuto } from '../domain/visitAuto';
+
+const demo = isDemoMode();
 
 const visitConverter: FirestoreDataConverter<Visit> = {
   toFirestore: (visit: Visit): DocumentData => {
@@ -52,11 +56,15 @@ interface VisitsState {
   recordVisit: (uid: string, input: RecordVisitInput) => Promise<string>;
 }
 
-export const useVisitsStore = create<VisitsState>((set) => ({
+export const useVisitsStore = create<VisitsState>((set, get) => ({
   visits: [],
   loading: true,
 
   subscribe: (uid) => {
+    if (demo) {
+      set({ visits: DEMO_VISITS, loading: false });
+      return () => {};
+    }
     set({ loading: true });
     const q = query(visitsCol(uid), orderBy('visitedAt', 'desc'));
     return onSnapshot(
@@ -82,6 +90,27 @@ export const useVisitsStore = create<VisitsState>((set) => ({
         partySize: input.partySize,
       }),
     };
+
+    if (demo) {
+      const id = `demo-new-${Date.now()}`;
+      set({ visits: [{ ...visit, id }, ...get().visits] });
+      // 체험 모드에서도 E1/E2가 동작하는 것처럼 보이도록 장소 스토어를 함께 갱신합니다.
+      const { usePlacesStore } = await import('./placesStore');
+      usePlacesStore.setState((s) => ({
+        places: s.places.map((p) =>
+          p.id === input.placeId
+            ? {
+                ...p,
+                visitCount: p.visitCount + 1,
+                lastVisitedAt: input.visitedAt,
+                latestRevisit: input.revisit,
+              }
+            : p,
+        ),
+      }));
+      return id;
+    }
+
     const ref = await addDoc(visitsCol(uid), visit as Visit);
 
     await updateDoc(placeDoc(uid, input.placeId), {

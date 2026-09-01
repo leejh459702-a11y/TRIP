@@ -10,6 +10,7 @@ import {
   requestNotificationPermission,
   startProximityWatch,
 } from '../../services/proximityWatch';
+import { isDemoMode, exitDemoMode } from '../../services/demoMode';
 import styles from './MyPage.module.css';
 
 const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
@@ -66,9 +67,25 @@ export function MyPage() {
 
       <div className={styles.section}>
         <div className={styles.sectionTitle}>계정</div>
-        <div style={{ fontSize: 13, color: 'var(--ink-muted)' }}>
-          {status === 'ready' && user ? `로그인 완료 · ${user.uid.slice(0, 8)}` : '로그인 준비 중…'}
-        </div>
+        {isDemoMode() ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ fontSize: 13, color: 'var(--brand-dark)', fontWeight: 700 }}>
+              ✨ 체험 모드 중 — 목 데이터로 동작하며, 새로고침하면 초기화됩니다
+            </div>
+            <button
+              type="button"
+              onClick={exitDemoMode}
+              className="btn btn-secondary btn-sm"
+              style={{ alignSelf: 'flex-start' }}
+            >
+              체험 모드 종료
+            </button>
+          </div>
+        ) : (
+          <div style={{ fontSize: 13, color: 'var(--ink-muted)' }}>
+            {status === 'ready' && user ? `로그인 완료 · ${user.uid.slice(0, 8)}` : '로그인 준비 중…'}
+          </div>
+        )}
       </div>
     </>
   );

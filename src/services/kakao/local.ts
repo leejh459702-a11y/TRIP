@@ -1,4 +1,6 @@
 import type { RegionCode } from '../../domain/types';
+import { isDemoMode } from '../demoMode';
+import { demoSearchKeyword } from '../demoData';
 
 const REST_KEY = import.meta.env.VITE_KAKAO_REST_KEY as string | undefined;
 const BASE = 'https://dapi.kakao.com/v2/local';
@@ -40,9 +42,10 @@ interface KakaoKeywordDoc {
   phone?: string;
 }
 
-/** 키워드로 장소 검색 (dapi.kakao.com/v2/local/search/keyword). */
+/** 키워드로 장소 검색 (dapi.kakao.com/v2/local/search/keyword). 체험 모드에서는 목 결과를 씁니다. */
 export async function searchKeyword(query: string): Promise<KeywordSearchResult[]> {
   if (!query.trim()) return [];
+  if (isDemoMode()) return demoSearchKeyword(query);
   const raw = await get('/search/keyword.json', { query, size: '15' });
   const docs = (raw as { documents?: KakaoKeywordDoc[] }).documents ?? [];
   return docs.map((d) => ({
