@@ -15,6 +15,7 @@ interface AppSettings {
   notifyBeforeDepartureMin: number; // C5
   notificationsEnabled: boolean; // C5
   savedFilterPresets: SavedFilterPreset[]; // G1
+  proximityAlertsEnabled: boolean; // G2, 기본 off
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -23,6 +24,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   notifyBeforeDepartureMin: 10,
   notificationsEnabled: false,
   savedFilterPresets: [],
+  proximityAlertsEnabled: false,
 };
 
 function settingsDoc(uid: string) {
@@ -56,6 +58,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       notifyBeforeDepartureMin: next.notifyBeforeDepartureMin,
       notificationsEnabled: next.notificationsEnabled,
       savedFilterPresets: next.savedFilterPresets,
+      proximityAlertsEnabled: next.proximityAlertsEnabled,
     });
   },
 }));

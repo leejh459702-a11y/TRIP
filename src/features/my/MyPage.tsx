@@ -2,8 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { useAuthStore } from '../../store/authStore';
 import { useSettingsStore, type ThemeMode } from '../../store/settingsStore';
+import { usePlacesStore } from '../../store/placesStore';
 import { exportAllData, importAllData, downloadTextFile, type BackupData } from '../../services/backup';
 import { placesToCsv, visitsToCsv } from '../../domain/csv';
+import {
+  notifyNearbyPlaces,
+  requestNotificationPermission,
+  startProximityWatch,
+} from '../../services/proximityWatch';
 import styles from './MyPage.module.css';
 
 const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
@@ -46,6 +52,11 @@ export function MyPage() {
       <div className={styles.section}>
         <div className={styles.sectionTitle}>이동 이상 감지 임계값 (B2)</div>
         <ThresholdInput uid={uid} />
+      </div>
+
+      <div className={styles.section}>
+        <div className={styles.sectionTitle}>주변 저장 장소 알림 (G2)</div>
+        <ProximityAlertsSection uid={uid} />
       </div>
 
       <div className={styles.section}>
@@ -141,6 +152,55 @@ function BackupSection({ uid }: { uid?: string }) {
         />
       </div>
       <div className={styles.desc}>JSON 백업은 가져오기로 그대로 되돌릴 수 있습니다.</div>
+    </div>
+  );
+}
+
+/** G2: 저장 장소 500m 이내 진입 시 알림. 배터리를 고려해 기본 off. */
+function ProximityAlertsSection({ uid }: { uid?: string }) {
+  const enabled = useSettingsStore((s) => s.proximityAlertsEnabled);
+  const update = useSettingsStore((s) => s.update);
+  const places = usePlacesStore((s) => s.places);
+  const subscribePlaces = usePlacesStore((s) => s.subscribe);
+
+  useEffect(() => {
+    if (!uid) return;
+    return subscribePlaces(uid);
+  }, [uid, subscribePlaces]);
+
+  useEffect(() => {
+    if (!enabled || places.length === 0) return;
+    let handle: ReturnType<typeof startProximityWatch> = null;
+    let cancelled = false;
+    void requestNotificationPermission().then(() => {
+      if (cancelled) return;
+      handle = startProximityWatch(places, notifyNearbyPlaces);
+    });
+    return () => {
+      cancelled = true;
+      handle?.stop();
+    };
+  }, [enabled, places]);
+
+  async function toggle() {
+    if (!uid) return;
+    if (!enabled) await requestNotificationPermission();
+    await update(uid, { proximityAlertsEnabled: !enabled });
+  }
+
+  return (
+    <div>
+      <button
+        type="button"
+        className={`${styles.themeButton} ${enabled ? styles.themeButtonActive : ''}`}
+        style={{ flex: 'none', padding: '8px 16px' }}
+        onClick={toggle}
+      >
+        {enabled ? '켜짐' : '꺼짐'}
+      </button>
+      <div className={styles.desc}>
+        저장한 장소 500m 이내에 들어오면 알려드려요. 같은 장소는 24시간에 한 번만 알립니다.
+      </div>
     </div>
   );
 }

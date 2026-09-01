@@ -21,9 +21,12 @@ import {
 import { computeTimeline, newWarningBlockIds, withoutDelay, type ResolvedBlock } from '../../domain/timeline';
 import { buildSharedSnapshot, generateShareToken } from '../../domain/share';
 import { generateIcs } from '../../domain/ics';
+import { currentChainDistanceM, optimizeDayOrder } from '../../domain/optimize';
 import { getRoutingProvider } from '../../services/routing';
 import { computeLegsForDay } from '../../services/legs';
 import { publishShareSnapshot, revokeShareSnapshot } from '../../services/share';
+import { fetchReactions } from '../../services/reactions';
+import type { BlockReaction } from '../../domain/reactions';
 import { BlockList } from './BlockList';
 import { TimelineView } from './TimelineView';
 import { CourseMapView } from './CourseMapView';
@@ -32,7 +35,10 @@ import { ExternalMapButton } from './ExternalMapButton';
 import { VisitEntrySheet, type VisitEntryValues } from './VisitEntrySheet';
 import { DayTabs } from './DayTabs';
 import { SharePanel } from './SharePanel';
+import { OptimizePreview } from './OptimizePreview';
+import { ReactionsSheet } from './ReactionsSheet';
 import styles from './CourseDetailPage.module.css';
+import optimizeStyles from './OptimizePreview.module.css';
 
 type ViewMode = 'block' | 'timeline' | 'map';
 
@@ -62,6 +68,9 @@ export function CourseDetailPage() {
   const [activeDayId, setActiveDayId] = useState<string | null>(null);
   const [legsByDay, setLegsByDay] = useState<Map<string, Map<string, RouteLeg>>>(new Map());
   const [checkoffBlockId, setCheckoffBlockId] = useState<string | null>(null);
+  const [optimizePreviewBlocks, setOptimizePreviewBlocks] = useState<Block[] | null>(null);
+  const [undoBlocks, setUndoBlocks] = useState<Block[] | null>(null);
+  const [reactions, setReactions] = useState<BlockReaction[] | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -84,6 +93,17 @@ export function CourseDetailPage() {
   const legs = (day && legsByDay.get(day.id)) || new Map<string, RouteLeg>();
 
   const placeById = useMemo(() => new Map(places.map((p) => [p.id, p])), [places]);
+
+  // F4: 소유자 반응 화면에서 blockId → 표시 이름으로 바로 찾을 수 있도록 전체 날짜를 훑어 둡니다.
+  const blockNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const d of course?.days ?? []) {
+      for (const b of d.blocks) {
+        map.set(b.id, b.type === 'free' ? b.label || '자유시간' : (placeById.get(b.placeId ?? '')?.name ?? '-'));
+      }
+    }
+    return map;
+  }, [course, placeById]);
 
   const resolvedBlocks: ResolvedBlock[] = useMemo(
     () =>
@@ -227,6 +247,37 @@ export function CourseDetailPage() {
     window.alert('템플릿으로 저장했습니다. 일정 탭에서 확인할 수 있어요.');
   }
 
+  // B6: 미리보기만 계산해 보여주고, 실제 저장은 사용자가 승인했을 때만 합니다.
+  function handleOptimize() {
+    const result = optimizeDayOrder(blocks, placeById);
+    if (!result.changed) {
+      window.alert('이미 최적 순서입니다.');
+      return;
+    }
+    setOptimizePreviewBlocks(result.blocks);
+  }
+
+  function handleApplyOptimize() {
+    if (!optimizePreviewBlocks) return;
+    setUndoBlocks(blocks);
+    persistBlocks(optimizePreviewBlocks);
+    setOptimizePreviewBlocks(null);
+    setTimeout(() => setUndoBlocks((prev) => (prev ? null : prev)), 8000);
+  }
+
+  function handleUndoOptimize() {
+    if (!undoBlocks) return;
+    persistBlocks(undoBlocks);
+    setUndoBlocks(null);
+  }
+
+  // F4: 소유자만 볼 수 있는 동행자 반응. 열 때만 조회합니다.
+  async function handleShowReactions() {
+    if (!course?.shareToken) return;
+    const result = await fetchReactions(course.shareToken);
+    setReactions(result);
+  }
+
   const usedPlaceIds = new Set(blocks.filter((b) => b.placeId).map((b) => b.placeId));
   const candidatePlaces = places.filter((p) => !usedPlaceIds.has(p.id));
 
@@ -331,12 +382,22 @@ export function CourseDetailPage() {
         onCreate={handleCreateShareLink}
         onRevoke={handleRevokeShareLink}
       />
+      {course.shareToken && (
+        <div style={{ padding: '0 16px 12px' }}>
+          <button type="button" onClick={handleShowReactions} className="btn btn-secondary btn-sm">
+            💬 동행자 반응 보기
+          </button>
+        </div>
+      )}
       <div style={{ padding: '0 16px 12px', display: 'flex', gap: 6 }}>
         <button type="button" onClick={handleExportIcs} className="btn btn-secondary btn-sm">
           캘린더로 내보내기 (.ics)
         </button>
         <button type="button" onClick={handleSaveAsTemplate} className="btn btn-secondary btn-sm">
           템플릿으로 저장
+        </button>
+        <button type="button" onClick={handleOptimize} className="btn btn-secondary btn-sm">
+          ✨ 순서 자동 최적화
         </button>
       </div>
 
@@ -399,6 +460,35 @@ export function CourseDetailPage() {
           estCost={checkoffBlock.estCost}
           onSave={handleSaveVisit}
           onSkip={() => setCheckoffBlockId(null)}
+        />
+      )}
+
+      {optimizePreviewBlocks && (
+        <OptimizePreview
+          beforeBlocks={blocks}
+          afterBlocks={optimizePreviewBlocks}
+          placeById={placeById}
+          beforeDistanceM={currentChainDistanceM(blocks, placeById)}
+          afterDistanceM={currentChainDistanceM(optimizePreviewBlocks, placeById)}
+          onApply={handleApplyOptimize}
+          onCancel={() => setOptimizePreviewBlocks(null)}
+        />
+      )}
+
+      {undoBlocks && (
+        <div className={optimizeStyles.undoBar}>
+          순서를 변경했습니다
+          <button className={optimizeStyles.undoButton} type="button" onClick={handleUndoOptimize}>
+            되돌리기
+          </button>
+        </div>
+      )}
+
+      {reactions && (
+        <ReactionsSheet
+          reactions={reactions}
+          blockNameById={blockNameById}
+          onClose={() => setReactions(null)}
         />
       )}
     </div>

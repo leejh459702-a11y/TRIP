@@ -5,7 +5,11 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { useAuthStore } from '../../store/authStore';
 import { useCoursesStore } from '../../store/coursesStore';
+import { usePlacesStore } from '../../store/placesStore';
+import { useVisitsStore } from '../../store/visitsStore';
 import { instantiateFromTemplate } from '../../domain/course';
+import type { CourseDay } from '../../domain/types';
+import { DraftGeneratorSheet } from './DraftGeneratorSheet';
 import styles from './CourseListPage.module.css';
 
 export function CourseListPage() {
@@ -14,6 +18,10 @@ export function CourseListPage() {
   const subscribe = useCoursesStore((s) => s.subscribe);
   const createCourse = useCoursesStore((s) => s.createCourse);
   const createFromObject = useCoursesStore((s) => s.createFromObject);
+  const places = usePlacesStore((s) => s.places);
+  const subscribePlaces = usePlacesStore((s) => s.subscribe);
+  const visits = useVisitsStore((s) => s.visits);
+  const subscribeVisits = useVisitsStore((s) => s.subscribe);
   const navigate = useNavigate();
 
   const [title, setTitle] = useState('');
@@ -21,11 +29,40 @@ export function CourseListPage() {
   const [partySize, setPartySize] = useState(2);
   const [templateId, setTemplateId] = useState('');
   const [creating, setCreating] = useState(false);
+  const [draftSheetOpen, setDraftSheetOpen] = useState(false);
 
   useEffect(() => {
     if (!uid) return;
-    return subscribe(uid);
-  }, [uid, subscribe]);
+    const unsubCourses = subscribe(uid);
+    const unsubPlaces = subscribePlaces(uid);
+    const unsubVisits = subscribeVisits(uid);
+    return () => {
+      unsubCourses();
+      unsubPlaces();
+      unsubVisits();
+    };
+  }, [uid, subscribe, subscribePlaces, subscribeVisits]);
+
+  async function handleCreateDraft(input: {
+    title: string;
+    startDate: string;
+    partySize: number;
+    days: CourseDay[];
+  }) {
+    if (!uid) return;
+    const now = new Date().toISOString();
+    const id = await createFromObject(uid, {
+      title: input.title,
+      startDate: input.startDate,
+      partySize: input.partySize,
+      days: input.days,
+      isTemplate: false,
+      createdAt: now,
+      updatedAt: now,
+    });
+    setDraftSheetOpen(false);
+    navigate(`/course/${id}`);
+  }
 
   const templates = courses.filter((c) => c.isTemplate);
   const normalCourses = courses.filter((c) => !c.isTemplate);
@@ -91,6 +128,25 @@ export function CourseListPage() {
           코스 만들기
         </button>
       </form>
+
+      <div style={{ padding: '0 16px 12px' }}>
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm"
+          onClick={() => setDraftSheetOpen(true)}
+        >
+          ✨ 코스 초안 자동 생성
+        </button>
+      </div>
+
+      {draftSheetOpen && (
+        <DraftGeneratorSheet
+          places={places}
+          visitCount={visits.length}
+          onCreate={handleCreateDraft}
+          onClose={() => setDraftSheetOpen(false)}
+        />
+      )}
 
       {normalCourses.length === 0 && templates.length === 0 ? (
         <EmptyState

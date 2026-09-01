@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fetchSharedSnapshot } from '../../services/share';
+import { addReaction, getOrCreateVisitorId, getReactedBlockIds, markBlockReacted } from '../../services/reactions';
+import { isValidCommentText } from '../../domain/reactions';
 import type { SharedSnapshot } from '../../domain/share';
 import { KakaoMapView, type MapMarkerSpec } from '../../components/map/KakaoMapView';
 import { CATEGORY_COLOR_VAR } from '../../domain/category';
@@ -129,12 +131,71 @@ export function SharePage() {
                   )}
                 </div>
               )}
+              {token && <BlockReactionForm token={token} blockId={b.blockId} />}
             </div>
           </div>
         ))}
       </div>
 
       <div className={styles.footer}>여행 코스 · 기록 앱에서 공유되었습니다</div>
+    </div>
+  );
+}
+
+/** F4: 로그인 없이 남기는 익명 반응(👍 또는 30자 코멘트). 한 블록당 이 브라우저에서 한 번만. */
+function BlockReactionForm({ token, blockId }: { token: string; blockId: string }) {
+  const [reacted, setReacted] = useState(() => getReactedBlockIds(token).has(blockId));
+  const [comment, setComment] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  async function submit(kind: 'like' | 'comment') {
+    if (busy || reacted) return;
+    if (kind === 'comment' && !isValidCommentText(comment)) return;
+    setBusy(true);
+    try {
+      await addReaction(token, {
+        blockId,
+        kind,
+        text: kind === 'comment' ? comment.trim() : undefined,
+        visitorId: getOrCreateVisitorId(),
+        createdAt: new Date().toISOString(),
+      });
+      markBlockReacted(token, blockId);
+      setReacted(true);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (reacted) {
+    return <div className={styles.reactedNote}>반응을 남겼어요, 감사합니다 🙌</div>;
+  }
+
+  return (
+    <div className={styles.reactionRow}>
+      <button
+        type="button"
+        className={styles.likeButton}
+        disabled={busy}
+        onClick={() => void submit('like')}
+      >
+        👍
+      </button>
+      <input
+        className={styles.commentInput}
+        value={comment}
+        maxLength={30}
+        placeholder="한마디 남기기 (30자)"
+        onChange={(e) => setComment(e.target.value)}
+      />
+      <button
+        type="button"
+        className={styles.commentSubmit}
+        disabled={busy || !isValidCommentText(comment)}
+        onClick={() => void submit('comment')}
+      >
+        남기기
+      </button>
     </div>
   );
 }

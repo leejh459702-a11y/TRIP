@@ -3,6 +3,7 @@ import { computeTimeline, type LegsByFromBlockId, type ResolvedBlock } from './t
 import type { Category, Course, CourseDay, TravelMode } from './types';
 
 export interface SharedBlock {
+  blockId: string; // F4: 동행자 코멘트가 이 값으로 블록을 가리킵니다.
   type: 'place' | 'free';
   name: string;
   category?: Category;
@@ -54,6 +55,7 @@ export function buildSharedSnapshot(
       const resolvedBlock = resolved.find((r) => r.block.id === entry.block.id);
       const place = resolvedBlock?.place;
       return {
+        blockId: entry.block.id,
         type: entry.block.type,
         name: entry.block.type === 'free' ? entry.block.label || '자유시간' : (place?.name ?? '-'),
         category: place?.category,
