@@ -45,6 +45,7 @@ export class EnemyAI {
   private timer = 0;
   private history: Perception[] = [];
   private wavePlan: UnitRole[] = [];
+  private wavesSent = 0;
   /** 디버그 패널용 최근 판단 정보 */
   lastPerception: Perception | null = null;
 
@@ -145,7 +146,10 @@ export class EnemyAI {
           if (!w.train(me, this.wavePlan[0]).ok) break;
           this.wavePlan.shift();
         }
-        if (this.wavePlan.length === 0) this.mode = 'save';
+        if (this.wavePlan.length === 0) {
+          this.mode = 'save';
+          this.wavesSent++;
+        }
       }
     }
 
@@ -181,7 +185,8 @@ export class EnemyAI {
   }
 
   private makeWave(era: number, gold: number): UnitRole[] {
-    const { wave, wavePerEra } = this.params;
+    const { wavePerEra } = this.params;
+    const wave = this.wavesSent === 0 ? this.params.openingWave : this.params.wave;
     const total = UNIT_ROLES.reduce((sum, r) => sum + wave[r] + wavePerEra[r] * era, 0);
     if (this.isRich(gold, era)) return new Array<UnitRole>(Math.ceil(total / 2)).fill('heavy');
     const n = (r: UnitRole) => wave[r] + wavePerEra[r] * era;

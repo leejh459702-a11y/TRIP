@@ -6,6 +6,7 @@ import { sellRefund } from '../systems/GameWorld';
 import type { CommandResult } from '../systems/types';
 import type { GameScene } from './GameScene';
 import { Button } from './ui/Button';
+import { DebugPanel } from './ui/DebugPanel';
 import { textStyle, UI } from './ui/theme';
 
 type Tab = 'units' | 'turrets' | 'slots' | 'sell' | 'evolve';
@@ -49,6 +50,9 @@ export class UIScene extends Phaser.Scene {
   private toast!: Phaser.GameObjects.Text;
   private pauseLayer!: Phaser.GameObjects.Container;
   private lastEra = -1;
+  private banner!: Phaser.GameObjects.Text;
+  private debug: DebugPanel | null = null;
+  private touchTipUntil = 0;
 
   constructor() {
     super('UIScene');
@@ -73,6 +77,12 @@ export class UIScene extends Phaser.Scene {
     this.buildPauseLayer();
 
     this.toast = this.add.text(640, 170, '', textStyle(22, UI.danger)).setOrigin(0.5).setAlpha(0).setDepth(50);
+    this.banner = this.add.text(640, 230, '', textStyle(38, '#ffe066')).setOrigin(0.5).setAlpha(0).setDepth(60);
+    const onBanner = (text: string, color: string) => this.showBanner(text, color);
+    this.game_.events.on('banner', onBanner);
+    this.events.once('shutdown', () => this.game_.events.off('banner', onBanner));
+
+    this.debug = import.meta.env.DEV ? new DebugPanel(this, this.game_) : null;
 
     this.bindKeys();
     this.selectTab('units');
@@ -146,6 +156,12 @@ export class UIScene extends Phaser.Scene {
     b.on('hover', (on: boolean) => {
       if (on) this.tooltipOwner = b;
       else if (this.tooltipOwner === b) this.tooltipOwner = null;
+    });
+    b.on('pointerdown', (p: Phaser.Input.Pointer) => {
+      if (p.wasTouch) {
+        this.tooltipOwner = b;
+        this.touchTipUntil = this.time.now + 1800;
+      }
     });
     b.on('denied', () => {
       this.game_.sfx.deny();
@@ -226,6 +242,14 @@ export class UIScene extends Phaser.Scene {
     if (this.game_.paused) return;
     const r = this.game_.command(fn);
     if (!r.ok) this.showToast(r.reason);
+  }
+
+  private showBanner(text: string, color: string): void {
+    const b = this.banner;
+    this.tweens.killTweensOf(b);
+    b.setText(text).setColor(color).setAlpha(0).setScale(0.6);
+    this.tweens.add({ targets: b, alpha: 1, scale: 1, duration: 260, ease: 'Back.Out' });
+    this.tweens.add({ targets: b, alpha: 0, delay: 1600, duration: 500 });
   }
 
   private showToast(msg: string): void {
@@ -448,6 +472,7 @@ export class UIScene extends Phaser.Scene {
     this.drawSpecial();
     this.drawMinimap();
     this.updateTooltip();
+    this.debug?.update();
 
     this.speedBtn.setTexts(`${this.game_.speed}x  F`);
     this.muteBtn.setTexts(this.game_.sfx.muted ? '음소거 M' : '소리 M');
@@ -532,6 +557,10 @@ export class UIScene extends Phaser.Scene {
   }
 
   private updateTooltip(): void {
+    if (this.touchTipUntil > 0 && this.time.now > this.touchTipUntil) {
+      this.touchTipUntil = 0;
+      this.tooltipOwner = null;
+    }
     const b = this.tooltipOwner;
     if (!b || !b.visible || !b.tooltip) {
       this.tooltip.setVisible(false);

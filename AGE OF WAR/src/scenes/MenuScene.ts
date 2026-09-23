@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { sfx } from '../audio/Sfx';
 import { AI_PARAMS, DIFFICULTIES, type Difficulty } from '../config/ai';
+import { gradientRect } from '../render/draw';
 import { Button } from './ui/Button';
 import { textStyle, UI } from './ui/theme';
 
@@ -12,8 +13,7 @@ export class MenuScene extends Phaser.Scene {
   create(): void {
     const { width } = this.scale;
     const bg = this.add.graphics();
-    bg.fillGradientStyle(0x1b1f3a, 0x1b1f3a, 0xf2b56b, 0xf2b56b, 1);
-    bg.fillRect(0, 0, 1280, 720);
+    gradientRect(bg, 0, 0, 1280, 720, 0x1b1f3a, 0xf2b56b);
 
     this.add.text(width / 2, 150, '크로노 프론트', textStyle(84, '#ffe066')).setOrigin(0.5);
     this.add.text(width / 2, 222, '원시 시대부터 미래까지, 한 줄의 전선을 지켜라', textStyle(22, UI.text, false)).setOrigin(0.5);

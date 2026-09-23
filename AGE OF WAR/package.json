@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "sim": "vite-node scripts/sim.ts",
+    "matchup": "vite-node scripts/matchup.ts"
   },
   "dependencies": {
     "phaser": "^3.90.0"
@@ -15,6 +17,7 @@
   "devDependencies": {
     "typescript": "^5.9.3",
     "vite": "^7.3.6",
+    "vite-node": "^3.2.4",
     "vitest": "^3.2.7"
   }
 }

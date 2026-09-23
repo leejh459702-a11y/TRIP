@@ -34,8 +34,16 @@ describe('EnemyAI', () => {
     w.side(1).gold = 5000;
     ai.update(0.5);
     expect(ai.mode === 'wave' || ai.mode === 'save').toBe(true);
+    expect(w.side(1).queue.length).toBeGreaterThan(0);
+    expect(ai.pendingWave.length + w.side(1).queue.length).toBeGreaterThan(1);
+  });
+
+  it('첫 웨이브는 작은 오프닝 구성이라 오래 모으지 않는다', () => {
+    const w = makeWorld();
+    const ai = new EnemyAI(w, 1, 'normal');
+    w.side(1).gold = 100; // 오프닝(근접3+원거리2 = 95G)은 가능, 본 웨이브(430G)는 불가
+    ai.update(0.5);
     expect(w.side(1).queue.length).toBe(5);
-    expect(w.side(1).queue.items[0].role).toBe('heavy');
   });
 
   it('최고 효율 유닛은 가용 골드 안에서 고른다', () => {

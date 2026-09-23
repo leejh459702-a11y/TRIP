@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { sfx } from '../audio/Sfx';
 import { AI_PARAMS, type Difficulty } from '../config/ai';
 import { ERAS } from '../config/eras';
+import { gradientRect } from '../render/draw';
 import { Button } from './ui/Button';
 import { textStyle, UI } from './ui/theme';
 
@@ -28,7 +29,7 @@ export class ResultScene extends Phaser.Scene {
     const { width } = this.scale;
     const bg = this.add.graphics();
     const top = data.win ? 0x2e6fb0 : 0x5a1f2a;
-    bg.fillGradientStyle(top, top, 0x111318, 0x111318, 1).fillRect(0, 0, 1280, 720);
+    gradientRect(bg, 0, 0, 1280, 720, top, 0x111318);
 
     const title = this.add.text(width / 2, 170, data.win ? '승리!' : '패배', textStyle(96, data.win ? '#ffe066' : '#ff8a8a')).setOrigin(0.5).setScale(0.4);
     this.tweens.add({ targets: title, scale: 1, duration: 500, ease: 'Back.Out' });

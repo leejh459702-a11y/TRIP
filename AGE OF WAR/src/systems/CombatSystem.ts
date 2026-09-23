@@ -204,7 +204,7 @@ export function updateTurrets(world: CombatWorld, dt: number): void {
         look: def.projectile,
         source: 'turret',
         slot: t.slot,
-        x: side.base.x,
+        x: side.base.frontX,
         targetX: target.x,
       });
       world.projectiles.push(p);

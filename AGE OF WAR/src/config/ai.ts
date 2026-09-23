@@ -19,6 +19,8 @@ export interface AIParams {
   defensiveRatio: number;
   /** 방어적 생산 시 유닛 효율 = hp×atk/cost × 역할 가중치 */
   roleWeight: Record<UnitRole, number>;
+  /** 첫 웨이브 구성(초반에 너무 오래 모으기만 하지 않도록 작게) */
+  openingWave: Record<UnitRole, number>;
   /** 우세 시 모았다가 보내는 웨이브 구성 */
   wave: Record<UnitRole, number>;
   /** 웨이브 구성에 시대 수 만큼 추가되는 유닛 (후반 웨이브를 키움) */
@@ -54,6 +56,7 @@ export const AI_PARAMS: Record<Difficulty, AIParams> = {
     reactionDelay: 2,
     defensiveRatio: 0.8,
     roleWeight: { melee: 1, ranged: 2.5, heavy: 1 },
+    openingWave: { melee: 3, ranged: 1, heavy: 0 },
     wave: { melee: 3, ranged: 2, heavy: 1 },
     wavePerEra: { melee: 0, ranged: 1, heavy: 0 },
     richGold: 1e9,
@@ -74,6 +77,7 @@ export const AI_PARAMS: Record<Difficulty, AIParams> = {
     reactionDelay: 0,
     defensiveRatio: 1.1,
     roleWeight: { melee: 1, ranged: 2.5, heavy: 1 },
+    openingWave: { melee: 3, ranged: 2, heavy: 0 },
     wave: { melee: 2, ranged: 4, heavy: 3 },
     wavePerEra: { melee: 0, ranged: 1, heavy: 1 },
     richGold: 250,
@@ -94,6 +98,7 @@ export const AI_PARAMS: Record<Difficulty, AIParams> = {
     reactionDelay: 0,
     defensiveRatio: 1.15,
     roleWeight: { melee: 1, ranged: 2.8, heavy: 1.1 },
+    openingWave: { melee: 4, ranged: 2, heavy: 0 },
     wave: { melee: 5, ranged: 3, heavy: 2 },
     wavePerEra: { melee: 1, ranged: 1, heavy: 0 },
     richGold: 0,
