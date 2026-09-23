@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { sfx, type Sfx } from '../audio/Sfx';
+import { AI_PARAMS, type Difficulty } from '../config/ai';
 import { BALANCE } from '../config/balance';
 import type { Unit } from '../entities/Unit';
 import { EnemyAI } from '../systems/EnemyAI';
@@ -20,6 +21,7 @@ export class GameScene extends Phaser.Scene {
   private hpTexts: Phaser.GameObjects.Text[] = [];
   private keys!: Record<'left' | 'right' | 'a' | 'd', Phaser.Input.Keyboard.Key>;
   private ended = false;
+  difficulty: Difficulty = 'normal';
 
   constructor() {
     super('GameScene');
@@ -29,9 +31,14 @@ export class GameScene extends Phaser.Scene {
     return BALANCE.sim.speedOptions[this.speedIdx];
   }
 
+  init(data: { difficulty?: Difficulty }): void {
+    this.difficulty = data?.difficulty ?? 'normal';
+  }
+
   create(): void {
-    this.world = new GameWorld({ seed: Date.now() });
-    this.ai = new EnemyAI(this.world, 1);
+    const params = AI_PARAMS[this.difficulty];
+    this.world = new GameWorld({ seed: Date.now(), incomeMult: [1, params.incomeMult] });
+    this.ai = new EnemyAI(this.world, 1, this.difficulty);
     this.acc = 0;
     this.paused = false;
     this.speedIdx = 0;
@@ -85,7 +92,7 @@ export class GameScene extends Phaser.Scene {
 
   quitToMenu(): void {
     this.scene.stop('UIScene');
-    this.scene.start('BootScene');
+    this.scene.start('MenuScene');
   }
 
   centerCameraOn(x: number): void {
@@ -121,20 +128,22 @@ export class GameScene extends Phaser.Scene {
 
   // ───────────────────────── 루프 ─────────────────────────
 
-  update(_t: number, delta: number): void {
-    const dtReal = Math.min(0.1, delta / 1000);
+  update(): void {
+    // Phaser 의 delta 는 저사양에서 스무딩으로 잘리므로 실제 경과 시간(rawDelta)으로 고정 스텝을 돌린다
+    const dtReal = Math.min(BALANCE.sim.maxFrameTime, this.game.loop.rawDelta / 1000);
     this.updateCamera(dtReal);
     if (!this.paused && !this.ended) {
       const dt = BALANCE.sim.fixedDt;
       this.acc += dtReal * this.speed;
       let steps = 0;
-      while (this.acc >= dt && steps < BALANCE.sim.maxStepsPerFrame * this.speed) {
+      const maxSteps = Math.ceil(BALANCE.sim.maxFrameTime / dt) * this.speed;
+      while (this.acc >= dt && steps < maxSteps) {
         this.world.step(dt);
         this.ai.update(dt);
         this.acc -= dt;
         steps++;
       }
-      if (this.acc > dt * 4) this.acc = 0;
+      if (steps >= maxSteps) this.acc = 0;
     }
     this.world.drainEvents();
     this.syncViews();
@@ -144,7 +153,7 @@ export class GameScene extends Phaser.Scene {
       const p = this.world.side(0);
       this.time.delayedCall(800, () => {
         this.scene.stop('UIScene');
-        this.scene.start('ResultScene', { win: this.world.winner === 0, time: this.world.time, kills: p.stats.kills, era: p.era });
+        this.scene.start('ResultScene', { win: this.world.winner === 0, time: this.world.time, kills: p.stats.kills, era: p.era, difficulty: this.difficulty });
       });
     }
   }

@@ -50,8 +50,8 @@ export const BALANCE = {
   /** 시뮬레이션 */
   sim: {
     fixedDt: 1 / 60,
-    /** 한 프레임에서 따라잡을 최대 스텝 수(스파이크 방지) */
-    maxStepsPerFrame: 12,
+    /** 한 프레임에서 따라잡을 최대 실제 시간(초). 탭 전환 등 스파이크 방지 */
+    maxFrameTime: 0.25,
     speedOptions: [1, 2] as const,
   },
 
