@@ -15,8 +15,8 @@ const dt = BALANCE.sim.fixedDt;
 let totalTime = 0;
 const wins = [0, 0, 0];
 for (let g = 0; g < games; g++) {
-  const w = new GameWorld({ seed: 1000 + g * 77, incomeMult: [AI_PARAMS[pd].incomeMult, AI_PARAMS[ed].incomeMult] });
-  const a = new EnemyAI(w, 0, process.env.PBOT === 'strong' ? { ...AI_PARAMS.hard, incomeMult: 1 } : pd);
+  const w = new GameWorld({ seed: 1000 + g * 77, incomeMult: [AI_PARAMS[ed].playerIncomeMult, AI_PARAMS[ed].incomeMult] });
+  const a = new EnemyAI(w, 0, process.env.PBOT === 'strong' ? { ...AI_PARAMS.hard, incomeMult: AI_PARAMS[ed].playerIncomeMult } : pd);
   const b = new EnemyAI(w, 1, ed);
   const eraAt: string[] = [];
   let lastEras = [0, 0];

@@ -49,7 +49,7 @@ export class GameScene extends Phaser.Scene {
 
   create(): void {
     const params = AI_PARAMS[this.difficulty];
-    this.world = new GameWorld({ seed: Date.now() >>> 0, incomeMult: [1, params.incomeMult] });
+    this.world = new GameWorld({ seed: Date.now() >>> 0, incomeMult: [params.playerIncomeMult, params.incomeMult] });
     this.ai = new EnemyAI(this.world, 1, this.difficulty);
     this.acc = 0;
     this.paused = false;

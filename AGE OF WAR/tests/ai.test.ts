@@ -1,8 +1,26 @@
+import { damageUnit } from '../src/systems/CombatSystem';
 import { describe, expect, it } from 'vitest';
 import { AI_PARAMS } from '../src/config/ai';
 import { EnemyAI } from '../src/systems/EnemyAI';
 import { GameWorld } from '../src/systems/GameWorld';
 import { makeWorld, place, run } from './helpers';
+
+describe('난이도별 플레이어 골드 배율', () => {
+  it('쉬움 ×1.3 / 보통 ×1.0 / 어려움 ×0.9 가 기본 수입과 처치 골드에 적용된다', () => {
+    for (const [d, mult] of [['easy', 1.3], ['normal', 1], ['hard', 0.9]] as const) {
+      expect(AI_PARAMS[d].playerIncomeMult).toBe(mult);
+      const w = new GameWorld({ seed: 1, incomeMult: [AI_PARAMS[d].playerIncomeMult, AI_PARAMS[d].incomeMult] });
+      const g0 = w.side(0).gold;
+      w.step(1);
+      expect(w.side(0).gold - g0).toBeCloseTo(2 * mult);
+      const before = w.side(0).gold;
+      const u = w.spawnUnit(1, { role: 'heavy', era: 0 }, 1000);
+      u.hp = 1;
+      damageUnit(w, u, 10);
+      expect(w.side(0).gold - before).toBeCloseTo(Math.round(100 * mult));
+    }
+  });
+});
 
 describe('EnemyAI', () => {
   it('EXP가 충족되면 즉시 진화한다', () => {

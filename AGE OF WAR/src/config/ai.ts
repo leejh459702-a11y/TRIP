@@ -9,8 +9,10 @@ export type SpecialPolicy = 'whenAny' | 'count' | 'cluster';
 export interface AIParams {
   label: string;
   desc: string;
-  /** 기본 수입·처치 골드 배율 */
+  /** 적 AI 가 받는 골드 배율(기본 수입·처치 골드) */
   incomeMult: number;
+  /** 이 난이도에서 플레이어가 받는 골드 배율(기본 수입·처치 골드) */
+  playerIncomeMult: number;
   /** 판단 주기(초) */
   thinkInterval: number;
   /** 판단 지연(초): 이 시간만큼 과거의 전장 상황을 보고 판단한다 */
@@ -52,8 +54,9 @@ export interface AIParams {
 export const AI_PARAMS: Record<Difficulty, AIParams> = {
   easy: {
     label: '쉬움',
-    desc: '수입 ×0.8 · 반응 2초 지연',
+    desc: '내 골드 +30% · 적 반응 느림',
     incomeMult: 0.8,
+    playerIncomeMult: 1.3,
     thinkInterval: 0.5,
     reactionDelay: 2,
     defensiveRatio: 0.8,
@@ -76,6 +79,7 @@ export const AI_PARAMS: Record<Difficulty, AIParams> = {
     label: '보통',
     desc: '기준 난이도',
     incomeMult: 1,
+    playerIncomeMult: 1,
     thinkInterval: 0.5,
     reactionDelay: 0,
     defensiveRatio: 1.1,
@@ -96,8 +100,9 @@ export const AI_PARAMS: Record<Difficulty, AIParams> = {
   },
   hard: {
     label: '어려움',
-    desc: '수입 ×1.3 · 포탑 우선 · 밀집 시 특수기',
+    desc: '내 골드 −10% · 적 수입 +30%',
     incomeMult: 1.3,
+    playerIncomeMult: 0.9,
     thinkInterval: 0.5,
     reactionDelay: 0,
     defensiveRatio: 1.15,
