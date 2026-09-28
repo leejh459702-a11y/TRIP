@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { BALANCE, type TurretTier } from '../config/balance';
-import { ERAS, TURRET_TIERS } from '../config/eras';
+import { ERAS } from '../config/eras';
 import type { Unit } from '../entities/Unit';
 import type { SideState } from '../systems/types';
 import { applyOrigin, makeTexture, type Pen, shade, TEAM } from './draw';
@@ -92,36 +92,181 @@ export function baseTexture(scene: Phaser.Scene, era: number, side: number): str
   return makeTexture(scene, `base_${era}_${side}`, 260, 330, 130, 320, (p) => drawBase(p, era, side));
 }
 
+const WOOD_T = 0x8a5a2b;
+const GOLD_T = 0xe0b83c;
+const STEEL_T = 0xc9d1da;
+const OUT_T = 0x1a1a24;
+
+/** 포탑 받침(시대별 재질) */
+function turretMount(p: Pen, era: number, side: number): void {
+  const team = TEAM[side];
+  switch (era) {
+    case 0:
+      p.rect(-18, 6, 34, 9, WOOD_T, 4);
+      p.rect(-14, 12, 26, 8, shade(WOOD_T, 0.8), 3);
+      p.thin(-10, 6, -6, 15, 0xd9c9a0, 2).thin(6, 6, 10, 15, 0xd9c9a0, 2);
+      break;
+    case 1:
+      p.rect(-18, 6, 34, 12, WOOD_T, 3);
+      p.rect(-18, 6, 34, 3, GOLD_T, 1);
+      p.circle(-12, 14, 2, GOLD_T).circle(10, 14, 2, GOLD_T);
+      break;
+    case 2:
+      p.rect(-18, 6, 34, 12, 0x6b4423, 3);
+      for (const bx of [-12, 0, 10]) p.rect(bx, 6, 3, 12, 0x5a606a, 0, false);
+      break;
+    case 3:
+      for (const [x, y] of [[-12, 14], [2, 14], [-5, 7], [9, 7]]) p.ellipse(x, y, 16, 9, 0xc9b98a);
+      break;
+    case 4:
+    default:
+      p.poly([-18, 18, -14, 6, 14, 6, 18, 18], 0x3a3f4f);
+      p.rect(-10, 10, 20, 3, team.light, 1, false);
+      p.glow(0, 11, 12, team.light, 0.12);
+      break;
+  }
+  p.rect(-10, 15, 20, 3, team.main, 1, false);
+}
+
 /** 포탑 텍스처: 관절(0,0) 기준 오른쪽을 향함 */
 export function turretTexture(scene: Phaser.Scene, era: number, tier: TurretTier, side: number): string {
-  const ti = TURRET_TIERS.indexOf(tier);
-  return makeTexture(scene, `tur_${era}_${tier}_${side}`, 110, 70, 34, 38, (p) => {
+  return makeTexture(scene, `tur_${era}_${tier}_${side}`, 120, 80, 38, 44, (p) => {
     const team = TEAM[side];
-    const mat = [0x8a5a2b, 0xc9a14a, 0x7a808a, 0x3a3a42, 0x5a6278][era];
-    const len = [30, 40, 26][ti];
-    const th = [8, 10, 18][ti];
-    // 포신/발사대
-    if (ti === 2) {
-      p.rect(-10, -th / 2 - 4, len + 8, th + 4, mat, 6);
-      p.ellipse(len - 2, -2, 14, th + 8, shade(mat, 0.7));
-    } else {
-      p.rect(-6, -th / 2, len + 6, th, mat, 3);
-      p.rect(len - 4, -th / 2 - 2, 8, th + 4, shade(mat, 0.8), 2);
+    const key = `${era}_${tier}`;
+    turretMount(p, era, side);
+    switch (key) {
+      // ── 원시 ──
+      case '0_light': // 돌 투척대: 장대 끝 바구니
+        p.line(-6, 2, 26, -16, WOOD_T, 4);
+        p.ellipse(29, -18, 14, 9, 0x6b4a2a);
+        p.circle(29, -21, 5, 0x9a8f80);
+        p.glow(27, -23, 1.5, 0xffffff, 0.6);
+        p.thin(-2, 0, 2, 4, 0xd9c9a0, 2);
+        break;
+      case '0_medium': // 가시 발사대: 뾰족 말뚝 묶음
+        p.rect(-12, -10, 30, 14, WOOD_T, 3);
+        for (let i = 0; i < 3; i++) {
+          const y = -8 + i * 5;
+          p.line(-4, y, 34, y - 1, shade(WOOD_T, 1.15), 3);
+          p.poly([34, y - 3, 42, y - 1, 34, y + 1.5], 0xd9c9a0);
+        }
+        p.thin(4, -12, 4, 6, 0xd9c9a0, 2).thin(14, -12, 14, 6, 0xd9c9a0, 2);
+        break;
+      case '0_heavy': // 바위 굴림대: 요람 위 큰 바위
+        p.line(-10, 2, 22, -6, WOOD_T, 5);
+        p.arc(18, -10, 14, 0.1, Math.PI - 0.1, shade(WOOD_T, 0.9), 4);
+        p.circle(18, -14, 13, 0x8c8f99);
+        p.poly([10, -20, 16, -24, 14, -16], 0xb8bcc4, false);
+        p.glow(22, -10, 3, 0x6b6e78, 1);
+        break;
+      // ── 고대 ──
+      case '1_light': // 투창대: 투창 3자루 거치
+        p.rect(-12, -6, 22, 10, WOOD_T, 2);
+        p.rect(-12, -6, 22, 2, GOLD_T, 0, false);
+        for (let i = 0; i < 3; i++) {
+          const y = -12 + i * 5;
+          p.line(-10, y + 2, 34, y - 2, 0xa07040, 2.5);
+          p.poly([34, y - 5, 44, y - 2.5, 34, y + 1], GOLD_T);
+        }
+        break;
+      case '1_medium': // 대형 쇠뇌(스코르피오)
+        p.rect(-10, -4, 50, 8, WOOD_T, 3);
+        p.arc(22, 0, 16, -1.5, -0.35, GOLD_T, 3);
+        p.arc(22, 0, 16, 0.35, 1.5, GOLD_T, 3);
+        p.thin(23, -16, 8, 0, 0xf2f2f2, 1).thin(8, 0, 23, 16, 0xf2f2f2, 1);
+        p.line(8, 0, 44, 0, 0x5a4030, 2, false);
+        p.poly([44, -3, 52, 0, 44, 3], GOLD_T);
+        p.rect(-6, -7, 8, 14, GOLD_T, 2);
+        break;
+      case '1_heavy': // 화염 항아리 투석기
+        p.line(-8, 4, 22, -18, WOOD_T, 5);
+        p.ellipse(26, -22, 16, 10, shade(WOOD_T, 0.8));
+        p.circle(26, -26, 7, 0xb5643a);
+        p.rect(23, -34, 6, 4, 0x8a4a2a, 1);
+        p.glow(26, -38, 6, 0xff9a2a, 0.55);
+        p.glow(26, -40, 3, 0xffe066, 1);
+        break;
+      // ── 중세 ──
+      case '2_light': // 궁수탑: 총안이 있는 목조 망루 + 궁수
+        p.rect(-14, -26, 30, 30, 0x8c929c, 2);
+        for (let i = 0; i < 3; i++) p.rect(-14 + i * 11, -32, 8, 7, 0x8c929c, 1);
+        p.rect(4, -18, 4, 12, OUT_T, 0, false);
+        p.circle(-2, -30, 5, 0xe6b48a);
+        p.rect(-7, -38, 10, 5, team.main, 2);
+        p.arc(12, -26, 8, -1.2, 1.2, WOOD_T, 2.5);
+        p.line(-6, -26, 16, -26, 0xd9c9a0, 1.5, false);
+        break;
+      case '2_medium': // 발리스타(철제)
+        p.rect(-12, -5, 58, 10, 0x6b4423, 3);
+        p.arc(26, 0, 20, -1.5, -0.35, 0x5a606a, 4);
+        p.arc(26, 0, 20, 0.35, 1.5, 0x5a606a, 4);
+        p.thin(27, -20, 8, 0, 0xf2f2f2, 1.2).thin(8, 0, 27, 20, 0xf2f2f2, 1.2);
+        p.line(8, 0, 52, 0, 0x5a4030, 3, false);
+        p.poly([52, -4, 62, 0, 52, 4], STEEL_T);
+        p.circle(-6, 0, 5, 0x5a606a);
+        p.thin(-9, -3, -3, 3, OUT_T, 1.5).thin(-9, 3, -3, -3, OUT_T, 1.5);
+        break;
+      case '2_heavy': // 끓는 기름통: 가마솥 + 증기
+        p.line(-10, 4, 20, -10, 0x6b4423, 5);
+        p.poly([12, -22, 34, -22, 32, -6, 14, -6], 0x3a3a42);
+        p.rect(10, -24, 26, 4, 0x5a606a, 2);
+        p.poly([34, -20, 42, -16, 34, -14], 0x3a3a42);
+        p.ellipse(23, -22, 20, 4, 0x8a6a1a, false);
+        p.glow(20, -30, 4, 0xffffff, 0.35).glow(26, -35, 5, 0xffffff, 0.25);
+        p.glow(22, -4, 5, 0xff7a1a, 0.6);
+        break;
+      // ── 화약 ──
+      case '3_light': // 소총 거치대: 양각대 위 소총
+        p.line(-12, 2, 30, -4, 0x6e4a2a, 5);
+        p.line(4, -2, 46, -6, 0x3a3a42, 3);
+        p.rect(12, -11, 14, 5, 0x22222a, 2);
+        p.line(20, -4, 14, 8, 0x3a3a42, 2).line(20, -4, 26, 8, 0x3a3a42, 2);
+        break;
+      case '3_medium': // 개틀링: 다연장 총열 + 탄창 + 크랭크
+        p.rect(-10, -9, 22, 18, 0x3a3a42, 4);
+        for (let i = 0; i < 4; i++) p.line(8, -6 + i * 4, 48, -6 + i * 4, i % 2 ? 0x2a2a30 : 0x5a5a62, 2.5, false);
+        p.rect(20, -9, 4, 18, GOLD_T, 1).rect(40, -9, 4, 18, GOLD_T, 1);
+        p.circle(48, 0, 4, OUT_T, false);
+        p.circle(-2, -14, 7, 0x5a5a62);
+        p.line(-12, 0, -18, 6, 0x5a5a62, 2);
+        p.circle(-18, 6, 2.5, 0xb03a2a);
+        break;
+      case '3_heavy': // 박격포: 짧고 굵은 포신(위로 45°)
+        p.poly([-8, 2, 20, -26, 32, -14, 4, 12], 0x3a3a42);
+        p.poly([18, -28, 24, -34, 38, -20, 32, -14], 0x2a2a30);
+        p.poly([-4, 0, 16, -20, 18, -18, -2, 2], 0xffffff, false, 0.18);
+        p.rect(-2, -8, 16, 4, GOLD_T, 1);
+        p.rect(-14, 8, 30, 5, 0x5a606a, 2);
+        break;
+      // ── 미래 ──
+      case '4_light': // 펄스 터렛: 돔 + 쌍발 방사구
+        p.ellipse(4, -6, 28, 22, 0x8a94ab);
+        p.poly([-6, -14, 6, -16, 2, -6, -8, -6], 0xffffff, false, 0.25);
+        p.rect(12, -12, 20, 5, 0x3a3f4f, 2).rect(12, -3, 20, 5, 0x3a3f4f, 2);
+        p.glow(33, -9.5, 4, team.light, 0.8).glow(33, -0.5, 4, team.light, 0.8);
+        p.rect(-2, -8, 8, 3, team.light, 1, false);
+        break;
+      case '4_medium': // 레일건: 긴 쌍레일 + 코일
+        p.rect(-12, -9, 24, 18, 0x5a6278, 5);
+        p.rect(8, -8, 54, 4, 0x8a94ab, 1).rect(8, 4, 54, 4, 0x8a94ab, 1);
+        for (let i = 0; i < 4; i++) p.rect(16 + i * 11, -9, 5, 18, 0x3a3f4f, 2);
+        p.rect(10, -2, 50, 4, team.light, 1, false);
+        p.glow(62, 0, 7, team.light, 0.6);
+        break;
+      case '4_heavy': // 플라즈마 캐논: 굵은 동체 + 발광 구체
+      default:
+        p.rect(-14, -14, 36, 26, 0x5a6278, 8);
+        p.poly([-10, -12, 10, -12, 6, -4, -10, -4], 0xffffff, false, 0.2);
+        p.rect(18, -10, 22, 20, 0x3a3f4f, 6);
+        p.glow(8, -1, 12, team.light, 0.3);
+        p.circle(8, -1, 6, team.light);
+        p.glow(6, -3, 2, 0xffffff, 1);
+        p.glow(42, 0, 8, team.light, 0.6);
+        for (let i = 0; i < 3; i++) p.rect(22 + i * 6, -12, 3, 24, 0x23262f, 0, false);
+        break;
     }
-    if (era === 1 || era === 2) {
-      // 활 팔(발리스타)
-      p.arc(len * 0.55, 0, 16, -1.6, 1.6, era === 1 ? 0x8a5a2b : 0x5a606a, 3);
-    }
-    if (era === 3 && ti === 1) for (let i = 0; i < 3; i++) p.thin(4, -3 + i * 3, len + 4, -3 + i * 3, 0x22222a, 1.5);
-    if (era === 4) {
-      p.rect(0, -2, len - 4, 3, team.light, 1, false);
-      p.glow(len + 2, 0, 5, team.light, 0.7);
-    }
-    if (era === 0 && ti !== 2) p.thin(6, -th / 2, 6, th / 2, 0xd9c9a0, 3);
-    // 받침
-    p.rect(-16, 4, 30, 14, shade(mat, 0.8), 4);
-    p.rect(-12, 8, 22, 5, team.main, 2, false);
-    p.circle(0, 2, 6, shade(mat, 1.2));
+    // 회전 관절
+    p.circle(0, 3, 4.5, era >= 3 ? 0x5a606a : shade(WOOD_T, 1.2));
   });
 }
 
