@@ -34,14 +34,15 @@ describe('데미지 / 사망 / 보상', () => {
     expect(u.dead).toBe(true);
   });
 
-  it('처치 보상: 골드 = cost×1.25, EXP = cost×2', () => {
-    expect(killReward(100)).toEqual({ gold: 125, exp: 200 });
+  it('처치 보상: 골드 = cost×killGoldMult, EXP = cost×2', () => {
+    const gold = Math.round(100 * BALANCE.economy.killGoldMult);
+    expect(killReward(100)).toEqual({ gold, exp: 200 });
     const w = makeWorld();
     const p = w.side(0);
     const g0 = p.gold;
     const u = place(w, 1, 'heavy', 1000);
     damageUnit(w, u, 9999);
-    expect(p.gold - g0).toBe(125);
+    expect(p.gold - g0).toBe(gold);
     expect(p.exp).toBe(200);
     expect(p.stats.kills).toBe(1);
     // 죽은 쪽은 보상 없음
@@ -77,7 +78,7 @@ describe('데미지 / 사망 / 보상', () => {
     run(w, 10);
     expect(w.unitsOf(1).length).toBe(0);
     expect(w.side(0).stats.kills).toBe(1);
-    expect(w.side(0).gold).toBe(BALANCE.economy.startGold + Math.round(15 * 1.25));
+    expect(w.side(0).gold).toBe(BALANCE.economy.startGold + Math.round(15 * BALANCE.economy.killGoldMult));
   });
 });
 

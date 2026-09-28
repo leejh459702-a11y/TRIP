@@ -59,8 +59,12 @@ export const BALANCE = {
     startGold: 175,
     /** 초당 기본 수입 */
     incomePerSec: 2,
-    /** 처치 시 골드 = cost × killGoldMult */
-    killGoldMult: 1.25,
+    /**
+     * 처치 시 골드 = cost × killGoldMult.
+     * 기획 초안은 1.25였으나 이기는 쪽이 눈덩이처럼 커져 판이 ~6분에 끝나서 1.0으로 조정
+     * (AI 대전 시뮬레이션 기준 보통 난이도 8~10분, 교착 없음)
+     */
+    killGoldMult: 1.0,
     /** 처치 시 EXP = cost × killExpMult */
     killExpMult: 2,
     /** 기지에 준 피해의 이 비율만큼 EXP 획득 */
