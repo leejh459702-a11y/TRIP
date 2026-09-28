@@ -92,7 +92,7 @@ scripts/    sim.ts · matchup.ts (헤드리스 밸런스 도구)
 | 시대 배율 | `eraMult.stat`, `eraMult.cost` | `stat`은 유닛 hp/atk, 포탑 DPS, 특수기 피해에 적용. `cost`는 유닛·포탑 가격에 적용 |
 | 진화 | `era.expToEvolve`, `era.baseMaxHp` | 필요 누적 EXP (4개), 시대별 기지 최대 HP (5개) |
 | 대기열 | `production.maxQueue` | |
-| 포탑 | `turret.rangeByEra`(시대별 사거리), `turret.slotUnlockCost`, `turret.sellRefund`, `turret.tiers.*` | `dps × cooldown`이 1발 피해. `splashRadius > 0`이면 범위 피해 |
+| 포탑 | `turret.rangeByEra`(시대별 사거리), `turret.tierRangeBonus`(등급별 추가 사거리), `turret.slotUnlockCost`, `turret.sellRefund`, `turret.tiers.*` | `dps × cooldown`이 1발 피해. `splashRadius > 0`이면 범위 피해 |
 | 특수기 | `special.*` | 쿨다운, 낙하물 수, 피해, 반경, 낙하 연출 시간 |
 | 전장 | `world.*`, `unitGap` | 레인 길이, 기지 위치, 스폰 간격, 유닛 간 최소 간격 |
 | 시뮬레이션 | `sim.*` | 고정 스텝, 배속 옵션 |

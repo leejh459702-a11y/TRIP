@@ -112,6 +112,8 @@ export const BALANCE = {
   turret: {
     /** 시대별 사거리(px, 기지 앞 가장자리 기준). 포탑을 구매한 시대의 값이 적용된다 */
     rangeByEra: [300, 325, 350, 375, 400],
+    /** 등급별 추가 사거리(px). 최종 사거리 = rangeByEra[시대] + tierRangeBonus[등급] */
+    tierRangeBonus: { light: 0, medium: 25, heavy: 50 } satisfies Record<TurretTier, number>,
     slotCount: 3,
     /** 슬롯 해금 비용 (1번은 기본 제공) */
     slotUnlockCost: [0, 1000, 3000],

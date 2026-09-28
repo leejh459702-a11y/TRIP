@@ -16,7 +16,12 @@ describe('포탑', () => {
   });
 
   it('포탑 사거리는 시대마다 25씩 늘어난다 (300 → 400)', () => {
-    expect([0, 1, 2, 3, 4].map((e) => getTurretStats('medium', e).range)).toEqual([300, 325, 350, 375, 400]);
+    expect([0, 1, 2, 3, 4].map((e) => getTurretStats('light', e).range)).toEqual([300, 325, 350, 375, 400]);
+  });
+
+  it('같은 시대 안에서도 저가 → 중가 → 고가 순으로 25씩 늘어난다', () => {
+    expect(['light', 'medium', 'heavy'].map((t) => getTurretStats(t as 'light', 0).range)).toEqual([300, 325, 350]);
+    expect(['light', 'medium', 'heavy'].map((t) => getTurretStats(t as 'light', 4).range)).toEqual([400, 425, 450]);
   });
 
   it('구매 시 골드 차감, 슬롯 1번만 기본 개방', () => {
