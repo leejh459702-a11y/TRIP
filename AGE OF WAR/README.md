@@ -85,8 +85,8 @@ scripts/    sim.ts · matchup.ts (헤드리스 밸런스 도구) · extract-unit
 ## 유닛 그림 교체하기
 
 1. `art/unit-concepts.webp`를 새 컨셉아트로 바꿉니다(투명 배경, 플레이어 파랑 기준, 오른쪽을 보는 자세).
-2. 배치가 달라졌다면 `scripts/extract-units.py`의 유닛별 영역(연결 성분 좌표·분할 다각형)을 맞춥니다.
-3. `pip install pillow numpy scipy` 후 `python3 scripts/extract-units.py` 실행 → `src/assets/units/*.webp`와 `src/render/unitSprites.ts`(크기·발 기준점·총구 위치)가 다시 만들어집니다.
+2. 배치가 달라졌다면 `scripts/extract-units.py`의 유닛별 영역(연결 성분 좌표·분할 다각형)을 맞춥니다. 다른 유닛에 가려진 부분은 `COMPLETE` 표(채울 영역·외곽선 두께·채색 방법)로 복원합니다.
+3. `pip install pillow numpy scipy opencv-python-headless` 후 `python3 scripts/extract-units.py` 실행 → `src/assets/units/*.webp`와 `src/render/unitSprites.ts`(크기·발 기준점·총구 위치)가 다시 만들어집니다.
 4. 적(빨강) 색은 게임이 불러올 때 파란 계열 색상을 붉게 회전해 자동으로 만듭니다.
 5. 걷기·공격 모션의 세기는 `src/render/UnitRenderer.ts`의 `MOTION` 표(흔들림·기울기·걸음 주기·공격 방식)에서 유닛별로 조정합니다.
 

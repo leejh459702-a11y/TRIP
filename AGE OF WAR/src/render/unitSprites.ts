@@ -20,15 +20,15 @@ export const UNIT_SPRITES: Record<string, UnitSpriteInfo> = {
   "u0_heavy": {
     "w": 198,
     "h": 216,
-    "anchorX": 87.3,
+    "anchorX": 87.6,
     "muzzleX": 193.1,
     "muzzleY": 139.2
   },
   "u1_melee": {
-    "w": 73,
+    "w": 77,
     "h": 132,
-    "anchorX": 34.2,
-    "muzzleX": 72.5,
+    "anchorX": 35.6,
+    "muzzleX": 76.5,
     "muzzleY": 26.0
   },
   "u1_ranged": {
@@ -39,11 +39,11 @@ export const UNIT_SPRITES: Record<string, UnitSpriteInfo> = {
     "muzzleY": 37.2
   },
   "u1_heavy": {
-    "w": 175,
+    "w": 183,
     "h": 143,
-    "anchorX": 71.2,
-    "muzzleX": 168.8,
-    "muzzleY": 28.4
+    "anchorX": 78.9,
+    "muzzleX": 176.8,
+    "muzzleY": 28.5
   },
   "u2_melee": {
     "w": 91,
@@ -57,13 +57,13 @@ export const UNIT_SPRITES: Record<string, UnitSpriteInfo> = {
     "h": 97,
     "anchorX": 27.6,
     "muzzleX": 92.5,
-    "muzzleY": 38.4
+    "muzzleY": 41.1
   },
   "u2_heavy": {
-    "w": 181,
+    "w": 194,
     "h": 213,
-    "anchorX": 61.9,
-    "muzzleX": 180.4,
+    "anchorX": 70.0,
+    "muzzleX": 193.4,
     "muzzleY": 52.1
   },
   "u3_melee": {
