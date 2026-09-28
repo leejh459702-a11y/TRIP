@@ -1,7 +1,7 @@
 # 크로노 프론트 (Chrono Front)
 
 원시 시대부터 미래 시대까지, **한 줄의 전선**에서 기지를 지키고 적 기지를 무너뜨리는 브라우저용 2D 횡스크롤 디펜스/러시 게임입니다.
-모든 그래픽은 Phaser Graphics로 코드 드로잉한 벡터 카툰 스타일이며, 모든 효과음은 WebAudio로 합성합니다. 외부 이미지·사운드 에셋은 쓰지 않습니다.
+유닛 15종은 컨셉아트(`art/unit-concepts.webp`)에서 잘라낸 스프라이트를 씁니다. 기지·포탑·배경·이펙트는 Phaser Graphics로 코드 드로잉한 벡터 카툰 스타일이고, 효과음은 모두 WebAudio로 합성합니다(사운드 파일 없음).
 
 - 기술 스택: Vite 7 + TypeScript 5 + Phaser 3.90, 테스트는 Vitest 3
 - 해상도: 1280×720 기준, `Scale.FIT` 반응형, 터치 지원
@@ -71,13 +71,24 @@ src/
   entities/ Unit · Turret · Base · Projectile        ← 순수 데이터
   systems/  GameWorld(명령 API/스텝) · CombatSystem · EconomySystem · ProductionQueue
             EraSystem · SpecialAbility · EnemyAI · rng · types   ← Phaser 비의존 순수 TS
-  render/   UnitRenderer · Background(3레이어 패럴랙스) · BaseRenderer(기지/포탑) · Effects · draw(펜/팔레트)
+  render/   UnitRenderer(스프라이트 로드·적 색 변환·모션) · unitSprites(자동 생성 매니페스트)
+            Background(3레이어 패럴랙스) · BaseRenderer(기지/포탑) · Effects · draw(펜/팔레트)
+  assets/units/  유닛 스프라이트 15종(webp, 표시 크기의 2배 해상도)
+art/        unit-concepts.webp (유닛 컨셉아트 원본)
   audio/    Sfx.ts (WebAudio 합성)
 tests/      Vitest 단위 테스트
-scripts/    sim.ts · matchup.ts (헤드리스 밸런스 도구)
+scripts/    sim.ts · matchup.ts (헤드리스 밸런스 도구) · extract-units.py (컨셉아트 → 유닛 스프라이트)
 ```
 
 `systems/`는 Phaser를 import하지 않습니다. `GameScene`은 `GameWorld.step(1/60)`을 고정 스텝으로 호출하고, `drainEvents()`로 받은 이벤트(`spawn`, `shoot`, `death`, `evolve` …)로 애니메이션, 이펙트, 사운드를 재생합니다.
+
+## 유닛 그림 교체하기
+
+1. `art/unit-concepts.webp`를 새 컨셉아트로 바꿉니다(투명 배경, 플레이어 파랑 기준, 오른쪽을 보는 자세).
+2. 배치가 달라졌다면 `scripts/extract-units.py`의 유닛별 영역(연결 성분 좌표·분할 다각형)을 맞춥니다.
+3. `pip install pillow numpy scipy` 후 `python3 scripts/extract-units.py` 실행 → `src/assets/units/*.webp`와 `src/render/unitSprites.ts`(크기·발 기준점·총구 위치)가 다시 만들어집니다.
+4. 적(빨강) 색은 게임이 불러올 때 파란 계열 색상을 붉게 회전해 자동으로 만듭니다.
+5. 걷기·공격 모션의 세기는 `src/render/UnitRenderer.ts`의 `MOTION` 표(흔들림·기울기·걸음 주기·공격 방식)에서 유닛별로 조정합니다.
 
 ## balance.ts 수정 가이드
 

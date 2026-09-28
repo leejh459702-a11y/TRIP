@@ -3,24 +3,28 @@ import { ERAS, TURRET_TIERS, UNIT_ROLES } from '../config/eras';
 import { Background } from '../render/Background';
 import { baseTexture, ensureTurretIcon, turretTexture } from '../render/BaseRenderer';
 import { prepareEffectTextures } from '../render/Effects';
-import { ensureUnitIcon, ensureUnitRig } from '../render/UnitRenderer';
+import { ensureUnitIcon, preloadUnitSprites, prepareUnitSprites } from '../render/UnitRenderer';
 import { textStyle } from './ui/theme';
 
-/** 모든 벡터 텍스처를 여러 프레임에 나눠 생성한 뒤 메뉴로 이동 */
+/** 유닛 스프라이트를 불러오고, 벡터 텍스처를 여러 프레임에 나눠 생성한 뒤 메뉴로 이동 */
 export class BootScene extends Phaser.Scene {
   constructor() {
     super('BootScene');
   }
 
+  preload(): void {
+    preloadUnitSprites(this);
+  }
+
   create(): void {
     const tasks: (() => void)[] = [];
+    tasks.push(() => prepareUnitSprites(this));
     tasks.push(() => prepareEffectTextures(this));
     tasks.push(() => Background.prepare(this));
     for (let era = 0; era < ERAS.length; era++) {
       for (const side of [0, 1]) {
         tasks.push(() => {
           baseTexture(this, era, side);
-          for (const role of UNIT_ROLES) ensureUnitRig(this, era, role, side);
           for (const tier of TURRET_TIERS) turretTexture(this, era, tier, side);
         });
       }

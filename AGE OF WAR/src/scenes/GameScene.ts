@@ -204,7 +204,7 @@ export class GameScene extends Phaser.Scene {
   private unitY(id: number, fallback = GROUND - 34): number {
     const v = this.unitViews.get(id);
     if (!v) return fallback;
-    return v.root.y - (v.unit.role === 'heavy' ? 52 : 32);
+    return v.root.y - (v.root.y - v.headY) * 0.55;
   }
 
   private handleEvent(e: GameEvent): void {
@@ -214,8 +214,16 @@ export class GameScene extends Phaser.Scene {
         if (this.inView(e.unit.x)) fx.puff(e.unit.x, GROUND, 0xd8cdb8, 4);
         break;
       case 'melee': {
-        this.unitViews.get(e.attacker.id)?.attack();
-        if (this.inView(e.attacker.x)) this.sfx.hit();
+        const v = this.unitViews.get(e.attacker.id);
+        v?.attack();
+        if (v?.blasts) {
+          // 대포 수레·메크: 근거리 포격 연출
+          const m = v.muzzle;
+          const glow = e.attacker.era >= 4 ? TEAM[e.attacker.side].light : 0xffe08a;
+          fx.muzzle(m.x, m.y, e.attacker.dir, glow);
+          fx.explosion(m.x + e.attacker.dir * 18, m.y, 16, e.attacker.era >= 4 ? glow : 0xffa53a);
+          if (this.inView(e.attacker.x)) this.sfx.shoot(e.attacker.era);
+        } else if (this.inView(e.attacker.x)) this.sfx.hit();
         break;
       }
       case 'shoot': {
@@ -344,7 +352,7 @@ export class GameScene extends Phaser.Scene {
         v = new UnitView(this, u, GROUND);
         this.unitViews.set(u.id, v);
       }
-      v.update();
+      v.update(dt * 1000);
     }
     // 월드에서 사라졌는데 death 이벤트를 못 받은 뷰 정리(안전장치)
     for (const [id, v] of this.unitViews) {
