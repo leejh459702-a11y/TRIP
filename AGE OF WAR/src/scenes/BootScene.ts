@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
 import { ERAS, TURRET_TIERS, UNIT_ROLES } from '../config/eras';
-import { Background } from '../render/Background';
+import { Background, preloadBackgrounds } from '../render/Background';
 import { baseTexture, ensureTurretIcon, turretTexture } from '../render/BaseRenderer';
 import { prepareEffectTextures } from '../render/Effects';
 import { ensureUnitIcon, preloadUnitSprites, prepareUnitSprites } from '../render/UnitRenderer';
 import { textStyle } from './ui/theme';
 
-/** 유닛 스프라이트를 불러오고, 벡터 텍스처를 여러 프레임에 나눠 생성한 뒤 메뉴로 이동 */
+/** 유닛 스프라이트·배경 그림을 불러오고, 벡터 텍스처를 여러 프레임에 나눠 생성한 뒤 메뉴로 이동 */
 export class BootScene extends Phaser.Scene {
   constructor() {
     super('BootScene');
@@ -14,6 +14,7 @@ export class BootScene extends Phaser.Scene {
 
   preload(): void {
     preloadUnitSprites(this);
+    preloadBackgrounds(this);
   }
 
   create(): void {
