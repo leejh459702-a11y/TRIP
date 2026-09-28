@@ -200,7 +200,7 @@ export function getTurretStats(tier: TurretTier, era: number): TurretStats {
     damage: Math.round(t.dps * t.cooldown * BALANCE.eraMult.stat[era]),
     cooldown: t.cooldown,
     splashRadius: t.splashRadius,
-    range: BALANCE.turret.range,
+    range: BALANCE.turret.rangeByEra[era],
   };
 }
 

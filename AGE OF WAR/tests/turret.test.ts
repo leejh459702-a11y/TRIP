@@ -12,7 +12,11 @@ describe('포탑', () => {
     expect([l.cost, l.damage / l.cooldown]).toEqual([100, 8]);
     expect([m.cost, m.damage / m.cooldown]).toEqual([200, 14]);
     expect([h.cost, h.damage / h.cooldown, h.splashRadius]).toEqual([350, 10, 60]);
-    expect(l.range).toBe(260);
+    expect(l.range).toBe(300);
+  });
+
+  it('포탑 사거리는 시대마다 25씩 늘어난다 (300 → 400)', () => {
+    expect([0, 1, 2, 3, 4].map((e) => getTurretStats('medium', e).range)).toEqual([300, 325, 350, 375, 400]);
   });
 
   it('구매 시 골드 차감, 슬롯 1번만 기본 개방', () => {
@@ -85,7 +89,7 @@ describe('포탑', () => {
     const s = w.side(0);
     s.gold = 100;
     w.buyTurret(0, 'light');
-    const far = place(w, 1, 'melee', s.base.frontX + BALANCE.turret.range + 100);
+    const far = place(w, 1, 'melee', s.base.frontX + BALANCE.turret.rangeByEra[0] + 100);
     (far.stats as { speed: number }).speed = 0;
     run(w, 2);
     expect(far.hp).toBe(far.maxHp);

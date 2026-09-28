@@ -110,8 +110,8 @@ export const BALANCE = {
   },
 
   turret: {
-    /** 기지 앞 가장자리 기준 사거리(px) */
-    range: 260,
+    /** 시대별 사거리(px, 기지 앞 가장자리 기준). 포탑을 구매한 시대의 값이 적용된다 */
+    rangeByEra: [300, 325, 350, 375, 400],
     slotCount: 3,
     /** 슬롯 해금 비용 (1번은 기본 제공) */
     slotUnlockCost: [0, 1000, 3000],
