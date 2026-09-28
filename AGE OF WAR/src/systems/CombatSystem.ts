@@ -86,34 +86,54 @@ export function damageBase(world: CombatWorld, attackerSide: SideId, amount: num
   }
 }
 
-/** 유닛 이동 / 타겟팅 / 공격 */
+/**
+ * 유닛 이동 / 타겟팅 / 공격.
+ * 양측을 동시에 처리한다(처리 순서에 따른 선제 타격 편향 방지):
+ * 1) 모든 유닛이 스텝 시작 시점 위치로 대상 선택
+ * 2) 공격 일괄 처리 — 이번 스텝에 죽은 유닛도 공격은 수행(동시 교환)
+ * 3) 대상이 없는 유닛 이동 — 적과의 충돌 한계도 스텝 시작 시점 위치 기준
+ */
 export function updateUnits(world: CombatWorld, dt: number): void {
   const bySide: [Unit[], Unit[]] = [[], []];
   for (const u of world.units) if (!u.dead) bySide[u.side].push(u);
   sortFrontFirst(bySide[0], 1);
   sortFrontFirst(bySide[1], -1);
 
+  // 1) 대상 선택 (스냅샷)
+  const targets = new Map<Unit, Target>();
+  for (const sideId of [0, 1] as SideId[]) {
+    const enemies = bySide[other(sideId)];
+    const enemyBase = world.sides[other(sideId)].base;
+    for (const u of bySide[sideId]) {
+      u.cooldownLeft = Math.max(0, u.cooldownLeft - dt);
+      targets.set(u, selectTarget(u, enemies, enemyBase));
+    }
+  }
+  const enemyFrontAtStart: [{ x: number; width: number } | null, { x: number; width: number } | null] = [
+    bySide[1][0] ? { x: bySide[1][0].x, width: bySide[1][0].width } : null,
+    bySide[0][0] ? { x: bySide[0][0].x, width: bySide[0][0].width } : null,
+  ];
+
+  // 2) 공격 일괄 처리
+  for (const [u, target] of targets) {
+    if (!target) continue;
+    u.state = 'attack';
+    u.targetId = target.kind === 'unit' ? target.unit.id : -1;
+    if (u.cooldownLeft <= 0) {
+      attack(world, u, target);
+      u.cooldownLeft = u.stats.cooldown;
+    }
+  }
+
+  // 3) 이동
   for (const sideId of [0, 1] as SideId[]) {
     const own = bySide[sideId];
-    const enemies = bySide[other(sideId)];
     const enemyBase = world.sides[other(sideId)].base;
     const dir = world.sides[sideId].dir;
 
     for (let i = 0; i < own.length; i++) {
       const u = own[i];
-      if (u.dead) continue;
-      u.cooldownLeft = Math.max(0, u.cooldownLeft - dt);
-      const target = selectTarget(u, enemies, enemyBase);
-
-      if (target) {
-        u.state = 'attack';
-        u.targetId = target.kind === 'unit' ? target.unit.id : -1;
-        if (u.cooldownLeft <= 0) {
-          attack(world, u, target);
-          u.cooldownLeft = u.stats.cooldown;
-        }
-        continue;
-      }
+      if (u.dead || targets.get(u)) continue;
 
       u.targetId = null;
       let nx = u.x + dir * u.stats.speed * dt;
@@ -124,7 +144,7 @@ export function updateUnits(world: CombatWorld, dt: number): void {
         if ((nx - limit) * dir > 0) nx = (u.x - limit) * dir > 0 ? u.x : limit;
       }
       // 적 유닛과 겹치지 않기
-      const enemyFront = enemies[0];
+      const enemyFront = enemyFrontAtStart[sideId];
       if (enemyFront) {
         const limit = enemyFront.x - dir * ((enemyFront.width + u.width) / 2);
         if ((nx - limit) * dir > 0) nx = (u.x - limit) * dir > 0 ? u.x : limit;

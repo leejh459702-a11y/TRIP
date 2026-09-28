@@ -108,3 +108,20 @@ describe('이동 / 충돌', () => {
     expect(w.unitsOf(0).length).toBe(1);
   });
 });
+
+describe('진영 대칭성', () => {
+  it('같은 유닛을 좌우 대칭으로 두면 선제 타격 없이 똑같이 피해를 주고받는다', () => {
+    for (const role of ['melee', 'ranged', 'heavy'] as const) {
+      const w = makeWorld();
+      const mid = (w.side(0).base.x + w.side(1).base.x) / 2;
+      const a = place(w, 0, role, mid - 150);
+      const b = place(w, 1, role, mid + 150);
+      for (let i = 0; i < 60 * 30 && !(a.dead && b.dead); i++) {
+        w.step(1 / 60);
+        expect(a.hp).toBe(b.hp);
+        expect(mid - a.x).toBeCloseTo(b.x - mid, 6);
+      }
+    }
+  });
+});
+
