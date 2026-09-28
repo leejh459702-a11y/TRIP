@@ -26,6 +26,8 @@ export class GameScene extends Phaser.Scene {
   private speedIdx = 0;
   private acc = 0;
   private ended = false;
+  private endTimer = 0;
+  private goingToResult = false;
   private unitViews = new Map<number, UnitView>();
   private baseViews!: [BaseView, BaseView];
   private background!: Background;
@@ -55,6 +57,8 @@ export class GameScene extends Phaser.Scene {
     this.paused = false;
     this.speedIdx = 0;
     this.ended = false;
+    this.endTimer = 0;
+    this.goingToResult = false;
     this.unitViews = new Map();
     this.dragging = false;
 
@@ -163,13 +167,14 @@ export class GameScene extends Phaser.Scene {
     this.syncViews(dtReal);
 
     if (this.world.isOver && !this.ended) this.finish();
+    if (this.ended) this.updateEnding(dtReal);
   }
 
   private finish(): void {
     this.ended = true;
     const win = this.world.winner === 0;
     const loser = this.world.side(win ? 1 : 0).base;
-    this.cameras.main.pan(loser.x, 360, 700, 'Sine.InOut');
+    this.cameras.main.pan(loser.x, 360, 700, Phaser.Math.Easing.Sine.InOut);
     for (let i = 0; i < 6; i++) {
       this.time.delayedCall(i * 180, () => {
         this.effects.explosion(loser.x + (Math.random() - 0.5) * 140, GROUND - 40 - Math.random() * 160, 40 + Math.random() * 30);
@@ -178,11 +183,17 @@ export class GameScene extends Phaser.Scene {
       });
     }
     this.time.delayedCall(400, () => this.sfx.victory(win));
+    this.endTimer = 0;
+  }
+
+  /** 종료 연출 후 결과 화면으로. 씬 타이머가 아니라 실제 경과 시간으로 센다(저사양에서도 멈추지 않도록) */
+  private updateEnding(dtReal: number): void {
+    this.endTimer += dtReal;
+    if (this.endTimer < BALANCE.sim.resultDelay || this.goingToResult) return;
+    this.goingToResult = true;
     const p = this.world.side(0);
-    this.time.delayedCall(2000, () => {
-      this.scene.stop('UIScene');
-      this.scene.start('ResultScene', { win, time: this.world.time, kills: p.stats.kills, era: p.era, difficulty: this.difficulty });
-    });
+    this.scene.stop('UIScene');
+    this.scene.start('ResultScene', { win: this.world.winner === 0, time: this.world.time, kills: p.stats.kills, era: p.era, difficulty: this.difficulty });
   }
 
   private inView(x: number): boolean {

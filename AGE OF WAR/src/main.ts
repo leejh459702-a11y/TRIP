@@ -16,6 +16,8 @@ const game = new Phaser.Game({
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
   input: { activePointers: 3 },
+  // 저사양에서 프레임 시간이 잘려 트윈·타이머가 느려지지 않도록 실제 경과 시간 사용
+  fps: { smoothStep: false },
   render: { antialias: true },
   scene: [BootScene, MenuScene, GameScene, UIScene, ResultScene],
 });

@@ -52,6 +52,8 @@ export const BALANCE = {
     fixedDt: 1 / 60,
     /** 한 프레임에서 따라잡을 최대 실제 시간(초). 탭 전환 등 스파이크 방지 */
     maxFrameTime: 0.25,
+    /** 기지 파괴 후 결과 화면으로 넘어가기까지(초, 실제 시간) */
+    resultDelay: 2,
     speedOptions: [1, 2] as const,
   },
 
