@@ -205,7 +205,7 @@ export class EnemyAI {
     const me = this.me;
     const side = w.side(me);
     if (this.mode === 'defend') return;
-    const reserve = this.mode === 'save' ? this.planCost(side.era) : 0;
+    const reserve = this.mode === 'save' ? this.planCost(side.era) * this.params.waveReserveRatio : 0;
     const threshold = (this.params.turretSpareGold * BALANCE.eraMult.cost[side.era]) / this.params.turretPriority;
     const spare = side.gold - reserve;
     if (spare < threshold) return;

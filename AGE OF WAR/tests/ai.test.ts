@@ -46,6 +46,16 @@ describe('EnemyAI', () => {
     expect(w.side(1).queue.length).toBe(5);
   });
 
+  it('웨이브를 모으는 중에도 여유 골드가 임계치 이상이면 포탑을 산다', () => {
+    const w = makeWorld();
+    const ai = new EnemyAI(w, 1, 'normal');
+    w.side(1).gold = 90;
+    ai.update(0.5); // 오프닝 웨이브 대기열 투입
+    w.side(1).gold = 400;
+    for (let i = 0; i < 4; i++) ai.update(0.5);
+    expect(w.side(1).turrets.some((t) => t !== null)).toBe(true);
+  });
+
   it('최고 효율 유닛은 가용 골드 안에서 고른다', () => {
     const ai = new EnemyAI(makeWorld(), 1, 'normal');
     expect(ai.bestEfficiencyUnit(10, 0)).toBeNull();

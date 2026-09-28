@@ -32,6 +32,8 @@ export interface AIParams {
   richGold: number;
   /** 이 골드(시대1 기준, 시대 비용 배율 적용) 이상 여유가 있으면 포탑 구매/교체 고려 */
   turretSpareGold: number;
+  /** 웨이브를 모으는 중일 때 포탑 구매 전에 남겨둘 골드 = 웨이브 비용 × 이 비율 */
+  waveReserveRatio: number;
   /** 포탑 우선도(클수록 임계치가 낮아짐) */
   turretPriority: number;
   /** 슬롯 해금 시 해금 비용 외에 남겨둘 골드 비율(해금비 대비) */
@@ -61,6 +63,7 @@ export const AI_PARAMS: Record<Difficulty, AIParams> = {
     wavePerEra: { melee: 0, ranged: 1, heavy: 0 },
     richGold: 1e9,
     turretSpareGold: 260,
+    waveReserveRatio: 0.5,
     turretPriority: 0.7,
     slotReserveRatio: 0.6,
     maxSlots: 1,
@@ -82,6 +85,7 @@ export const AI_PARAMS: Record<Difficulty, AIParams> = {
     wavePerEra: { melee: 0, ranged: 1, heavy: 1 },
     richGold: 250,
     turretSpareGold: 200,
+    waveReserveRatio: 0,
     turretPriority: 1,
     slotReserveRatio: 0.4,
     maxSlots: 2,
@@ -103,6 +107,7 @@ export const AI_PARAMS: Record<Difficulty, AIParams> = {
     wavePerEra: { melee: 1, ranged: 1, heavy: 0 },
     richGold: 0,
     turretSpareGold: 120,
+    waveReserveRatio: 0,
     turretPriority: 1.8,
     slotReserveRatio: 0.2,
     maxSlots: 3,

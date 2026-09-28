@@ -6,6 +6,16 @@ import { AI_PARAMS, type AIParams } from '../src/config/ai';
 import { BALANCE } from '../src/config/balance';
 const W = Number(process.env.W ?? BALANCE.world.width);
 Object.assign(BALANCE.world, { width: W, baseX: [120, W - 120] });
+// 실험용 수치 덮어쓰기: BAL='{"era":{"baseMaxHp":[1000,2200,4000,6400,10000]}}'
+if (process.env.BAL) {
+  const merge = (t: Record<string, unknown>, o: Record<string, unknown>) => {
+    for (const [k, v] of Object.entries(o)) {
+      if (v && typeof v === 'object' && !Array.isArray(v)) merge(t[k] as Record<string, unknown>, v as Record<string, unknown>);
+      else t[k] = v;
+    }
+  };
+  merge(BALANCE as unknown as Record<string, unknown>, JSON.parse(process.env.BAL));
+}
 import { EnemyAI } from '../src/systems/EnemyAI';
 import { GameWorld } from '../src/systems/GameWorld';
 const variants: Record<string, Partial<AIParams>> = {
@@ -24,14 +34,19 @@ const variants: Record<string, Partial<AIParams>> = {
   heavyMix2: { wave: { melee: 2, ranged: 4, heavy: 3 }, wavePerEra: { melee: 0, ranged: 1, heavy: 1 }, richGold: 250, defensiveRatio: 1.1 },
   bigWave: { wave: { melee: 5, ranged: 3, heavy: 2 } },
 };
+// 임시 실험용: X='{"turretSpareGold":60}' 형태로 변형 'x' 추가
+if (process.env.X) variants.x = JSON.parse(process.env.X);
 const only = process.argv[2];
 const ref0 = AI_PARAMS[(process.env.REF as 'normal') ?? 'normal'];
-const ref: AIParams = process.env.REFV ? { ...ref0, ...variants[process.env.REFV] } : ref0;
+const refBase: AIParams = process.env.REFV ? { ...ref0, ...variants[process.env.REFV] } : ref0;
 for (const [name, v] of Object.entries(variants)) {
   if (only && !only.split(',').includes(name)) continue;
-  const p: AIParams = { ...ref, ...v };
+  const p: AIParams = { ...refBase, ...v };
+  // MIRROR=1 이면 기준 AI 에도 같은 변형을 적용(양측 동일 → 경기 시간 측정용)
+  const ref: AIParams = process.env.MIRROR ? p : refBase;
   const res = [0, 0, 0];
   let t = 0;
+  let decidedT = 0;
   for (let g = 0; g < 10; g++) {
     const w = new GameWorld({ seed: 500 + g * 31, incomeMult: [p.incomeMult, ref.incomeMult] });
     const a = new EnemyAI(w, g % 2 === 0 ? 0 : 1, p);
@@ -40,8 +55,11 @@ for (const [name, v] of Object.entries(variants)) {
     const dt = 1 / 60;
     while (!w.isOver && w.time < 25 * 60) { w.step(dt); a.update(dt); b.update(dt); w.drainEvents(); }
     t += w.time;
+    if (w.winner !== null) decidedT += w.time;
     const variantSide = g % 2 === 0 ? 0 : 1;
     res[w.winner === null ? 2 : w.winner === variantSide ? 0 : 1]++;
   }
-  console.log(`${name.padEnd(10)} W${res[0]} L${res[1]} T${res[2]} avg ${(t / 600).toFixed(1)}m`);
+  const decided = res[0] + res[1];
+  const dAvg = decided ? (decidedT / decided / 60).toFixed(1) : '-';
+  console.log(`${name.padEnd(10)} W${res[0]} L${res[1]} T${res[2]} avg ${(t / 600).toFixed(1)}m  승부난 판 평균 ${dAvg}m`);
 }
