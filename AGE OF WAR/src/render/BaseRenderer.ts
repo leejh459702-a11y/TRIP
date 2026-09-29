@@ -1,95 +1,79 @@
 import Phaser from 'phaser';
 import { BALANCE, type TurretTier } from '../config/balance';
-import { ERAS } from '../config/eras';
 import type { Unit } from '../entities/Unit';
 import type { SideState } from '../systems/types';
 import { applyOrigin, makeTexture, type Pen, shade, TEAM } from './draw';
+import { recolorToRed } from './recolor';
 
-/** 시대별 기지(동굴 → 석조 → 성 → 요새 → 미래 기지)와 포탑 */
+/**
+ * 시대별 기지 그림(src/assets/bases/era{0-4}.webp, 원본 art/bases/)과 포탑.
+ * 그림에 그려진 포탑 받침 3칸 위에 포탑을 올린다. 적(빨강)은 파란 계열을 붉게 회전하고 좌우 반전한다.
+ */
 
 const GROUND = BALANCE.world.groundY;
-/** 기지 중심 기준 포탑 슬롯 위치(오른쪽을 바라보는 기준) */
-export const TURRET_MOUNTS = [
-  { x: 30, y: -206 },
-  { x: 62, y: -150 },
-  { x: 70, y: -96 },
-];
+/** 원화 캔버스 크기(px) */
+const ART_SIZE = 1254;
+/** 원화 → 화면 배율 */
+const BASE_SCALE = 0.17;
+/** 포탑 표시 배율(받침 크기에 맞춤) */
+export const TURRET_SCALE = 0.8;
+/** 포탑 텍스처에서 관절(0,0)부터 받침 바닥까지 높이 */
+const TURRET_FOOT = 18;
 
-function flag(p: Pen, x: number, y: number, h: number, side: number): void {
-  p.line(x, y, x, y - h, 0x5a4a3a, 4);
-  p.poly([x + 2, y - h, x + 38, y - h + 10, x + 2, y - h + 22], TEAM[side].main);
+interface BaseArt {
+  /** 기지 중심(base.x)에 맞출 원화 x */
+  anchorX: number;
+  /** 지면에 닿는 원화 y */
+  bottom: number;
+  /** 포탑 받침 윗면 중앙(원화 좌표). 0이 가장 높은 칸 */
+  slots: [number, number][];
 }
 
-function drawBase(p: Pen, era: number, side: number): void {
-  const team = TEAM[side];
-  switch (ERAS[era].base.look) {
-    case 'cave': {
-      p.poly([-96, 0, -86, -90, -58, -160, -8, -200, 46, -186, 80, -130, 96, -60, 98, 0], 0x8a7d6b);
-      p.poly([-70, -40, -60, -110, -30, -150, -10, -120, -40, -60], 0x9d917f, false);
-      p.poly([40, -150, 70, -120, 60, -90, 36, -110], 0x776b5b, false);
-      p.ellipse(34, -44, 70, 88, 0x2a1f18);
-      p.rect(-4, -4, 76, 8, 0x5f4526, 0, false);
-      p.line(84, -10, 84, -70, 0x6b4a2a, 5);
-      p.circle(84, -76, 8, 0xffb13b);
-      p.glow(84, -80, 5, 0xfff1a8, 1);
-      p.ellipse(-50, -8, 26, 8, 0xefe6d0);
-      flag(p, -8, -196, 56, side);
-      break;
-    }
-    case 'stone': {
-      p.rect(-96, -24, 192, 24, 0xcfc4a4, 2);
-      p.rect(-86, -40, 172, 18, 0xdcd2b4, 2);
-      for (let i = 0; i < 5; i++) p.rect(-78 + i * 36, -150, 18, 112, 0xefe6cc, 2);
-      p.rect(-90, -170, 180, 22, 0xdcd2b4, 2);
-      p.rect(-90, -166, 180, 8, team.main, 0, false);
-      p.poly([-96, -168, 0, -222, 96, -168], 0xe8dfc2);
-      p.circle(0, -186, 9, team.main);
-      p.rect(22, -110, 36, 72, 0x5a4630, 3);
-      flag(p, -60, -220, 40, side);
-      break;
-    }
-    case 'castle': {
-      p.rect(-70, -160, 150, 160, 0x9aa0aa, 2);
-      for (let r = 0; r < 7; r++) for (let c = 0; c < 6; c++) p.rect(-66 + c * 25 + (r % 2) * 12, -150 + r * 21, 20, 2, 0x7d838d, 0, false);
-      for (let i = 0; i < 6; i++) p.rect(-70 + i * 26, -176, 16, 18, 0x9aa0aa, 2);
-      p.rect(-100, -232, 56, 232, 0x8c929c, 2);
-      for (let i = 0; i < 3; i++) p.rect(-100 + i * 20, -248, 14, 18, 0x8c929c, 2);
-      p.poly([-106, -246, -72, -296, -38, -246], team.main);
-      p.rect(-84, -200, 10, 22, 0x2a2a34, 5);
-      p.poly([14, 0, 14, -64, 34, -86, 54, -64, 54, 0], 0x3a2a1e);
-      p.thin(20, -60, 48, -60, 0x6b4a2a, 3).thin(20, -40, 48, -40, 0x6b4a2a, 3);
-      p.rect(-24, -140, 18, 44, team.main, 0);
-      break;
-    }
-    case 'fortress': {
-      p.poly([-96, 0, -86, -150, 70, -150, 96, -60, 96, 0], 0x9c6b4c);
-      for (let r = 0; r < 7; r++) for (let c = 0; c < 8; c++) p.rect(-84 + c * 22 + (r % 2) * 11, -140 + r * 20, 16, 2, 0x7a513a, 0, false);
-      p.rect(-92, -166, 164, 18, 0x8a5a3e, 2);
-      for (let i = 0; i < 3; i++) p.circle(-40 + i * 40, -110, 9, 0x2a1f18);
-      p.rect(-20, -60, 50, 60, 0x3a2a1e, 3);
-      for (let i = 0; i < 5; i++) p.ellipse(56 + (i % 3) * 14, -8 - Math.floor(i / 3) * 12, 18, 12, 0xc9b98a);
-      flag(p, -70, -166, 70, side);
-      break;
-    }
-    case 'future': {
-      p.glow(0, -90, 118, team.light, 0.12);
-      p.rect(-92, -30, 184, 30, 0x3a3f4f, 6);
-      p.ellipse(0, -60, 176, 190, 0x5a6278);
-      p.rect(-92, -60, 184, 60, 0x4a5064, 0);
-      p.ellipse(0, -110, 120, 70, 0x6b7489, false);
-      for (let i = 0; i < 5; i++) p.rect(-70 + i * 30, -52, 18, 8, team.light, 3, false);
-      p.rect(26, -86, 40, 86, 0x23262f, 8);
-      p.rect(32, -80, 28, 6, team.light, 2, false);
-      p.line(-30, -150, -40, -230, 0x8a93a8, 4);
-      p.circle(-40, -234, 7, team.light);
-      p.arc(0, -40, 140, -1.3, -0.1, team.light, 3, false);
-      break;
-    }
+/** 원화 좌표는 1254×1254 원본 기준. 기지 앞(오른쪽) 가장자리가 base.x+85 근처에 오도록 anchorX를 잡음 */
+const BASE_ART: BaseArt[] = [
+  { anchorX: 722, bottom: 1128, slots: [[755, 328], [912, 540], [1110, 740]] }, // 동굴: 나무 받침대
+  { anchorX: 739, bottom: 1146, slots: [[630, 234], [945, 424], [1075, 636]] }, // 신전: 원형 기단
+  { anchorX: 720, bottom: 1176, slots: [[695, 238], [815, 505], [1085, 718]] }, // 성: 돌 기둥 받침
+  { anchorX: 714, bottom: 1168, slots: [[652, 345], [930, 530], [1080, 686]] }, // 요새: 철판 포대, 3번은 아치 옆 돌턱
+  { anchorX: 743, bottom: 1148, slots: [[990, 426], [1115, 655], [365, 925]] }, // 미래: 원형 포대
+];
+
+const baseUrls = import.meta.glob('../assets/bases/*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
+
+export function preloadBases(scene: Phaser.Scene): void {
+  for (const [path, url] of Object.entries(baseUrls)) {
+    const name = path.split('/').pop()!.replace('.webp', '');
+    scene.load.image(`basesrc_${name}`, url);
   }
 }
 
-export function baseTexture(scene: Phaser.Scene, era: number, side: number): string {
-  return makeTexture(scene, `base_${era}_${side}`, 260, 330, 130, 320, (p) => drawBase(p, era, side));
+const baseTextureKey = (era: number, side: number) => `base_${era}_${side}`;
+
+/** 진영별 기지 텍스처(파랑 원본 / 빨강 변환) 등록. BootScene.create 에서 호출 */
+export function prepareBaseTextures(scene: Phaser.Scene): void {
+  for (let era = 0; era < BASE_ART.length; era++) {
+    const src = `basesrc_era${era}`;
+    if (!scene.textures.exists(src)) continue;
+    const img = scene.textures.get(src).getSourceImage() as HTMLImageElement;
+    if (!scene.textures.exists(baseTextureKey(era, 0))) {
+      const c = document.createElement('canvas');
+      c.width = img.width;
+      c.height = img.height;
+      c.getContext('2d')!.drawImage(img, 0, 0);
+      scene.textures.addCanvas(baseTextureKey(era, 0), c);
+    }
+    if (!scene.textures.exists(baseTextureKey(era, 1))) scene.textures.addCanvas(baseTextureKey(era, 1), recolorToRed(img));
+  }
+}
+
+/** 기지 중심·지면 기준 포탑 관절 위치(오른쪽을 바라보는 기준) */
+export function turretMountOffset(era: number, slot: number): { x: number; y: number } {
+  const art = BASE_ART[era];
+  const [sx, sy] = art.slots[slot];
+  return {
+    x: (sx - art.anchorX) * BASE_SCALE,
+    y: (sy - art.bottom) * BASE_SCALE - TURRET_FOOT * TURRET_SCALE,
+  };
 }
 
 const WOOD_T = 0x8a5a2b;
@@ -270,14 +254,12 @@ export function turretTexture(scene: Phaser.Scene, era: number, tier: TurretTier
   });
 }
 
-function plateTexture(scene: Phaser.Scene, locked: boolean): string {
-  return makeTexture(scene, locked ? 'plate_locked' : 'plate_open', 60, 30, 30, 8, (p) => {
-    p.rect(-22, 10, 44, 10, locked ? 0x55555f : 0x6b5a44, 3);
-    p.rect(-10, 18, 20, 8, locked ? 0x44444c : 0x5a4a38, 2);
-    if (locked) {
-      p.arc(0, 0, 6, Math.PI, 0, 0xc9c9d0, 3);
-      p.rect(-8, 0, 16, 11, 0xc9c9d0, 2);
-    }
+/** 잠긴 포탑 칸 표시(자물쇠). 원점 = 받침 윗면 중앙 */
+function lockTexture(scene: Phaser.Scene): string {
+  return makeTexture(scene, 'slot_locked', 30, 30, 15, 26, (p) => {
+    p.arc(0, -14, 6, Math.PI, 0, 0xc9c9d0, 3);
+    p.rect(-8, -14, 16, 12, 0xc9c9d0, 2);
+    p.circle(0, -8, 2, 0x44444c, false);
   });
 }
 
@@ -296,7 +278,8 @@ export function ensureTurretIcon(scene: Phaser.Scene, era: number, tier: TurretT
 export class BaseView {
   private readonly img: Phaser.GameObjects.Image;
   private readonly turrets: Phaser.GameObjects.Image[] = [];
-  private readonly plates: Phaser.GameObjects.Image[] = [];
+  /** 잠긴 칸 자물쇠 표시 */
+  private readonly locks: Phaser.GameObjects.Image[] = [];
   private readonly hpGfx: Phaser.GameObjects.Graphics;
   private readonly hpText: Phaser.GameObjects.Text;
   private era = -1;
@@ -307,14 +290,10 @@ export class BaseView {
   constructor(private readonly scene: Phaser.Scene, private readonly side: SideState) {
     this.dir = side.dir;
     this.x = side.base.x;
-    this.img = scene.add.image(this.x, GROUND + 6, baseTexture(scene, 0, side.id)).setDepth(GROUND - 30);
-    applyOrigin(this.img).setScale(this.dir, 1);
-    for (let i = 0; i < TURRET_MOUNTS.length; i++) {
-      const m = this.mount(i);
-      const plate = applyOrigin(scene.add.image(m.x, m.y, plateTexture(scene, true))).setDepth(GROUND - 29).setScale(this.dir, 1);
-      this.plates.push(plate);
-      const t = scene.add.image(m.x, m.y, '__DEFAULT').setVisible(false).setDepth(GROUND - 28);
-      this.turrets.push(t);
+    this.img = scene.add.image(this.x, GROUND + 6, baseTextureKey(0, side.id)).setDepth(GROUND - 30);
+    for (let i = 0; i < BALANCE.turret.slotCount; i++) {
+      this.locks.push(applyOrigin(scene.add.image(0, 0, lockTexture(scene))).setDepth(GROUND - 29).setVisible(false));
+      this.turrets.push(scene.add.image(0, 0, '__DEFAULT').setVisible(false).setDepth(GROUND - 28));
     }
     this.hpGfx = scene.add.graphics().setDepth(GROUND + 60);
     this.hpText = scene.add.text(0, 0, '', {
@@ -323,37 +302,53 @@ export class BaseView {
     this.setEra(side.era, true);
   }
 
+  /** 포탑 관절 위치(월드). 현재 기지 그림의 받침 칸을 따른다 */
   mount(i: number): { x: number; y: number } {
-    const m = TURRET_MOUNTS[i];
-    return { x: this.x + this.dir * m.x, y: GROUND + m.y };
+    const m = turretMountOffset(Math.max(0, this.era), i);
+    return { x: this.x + this.dir * m.x, y: GROUND + 6 + m.y };
   }
 
   /** 포탑 포구 위치(월드) */
   muzzle(i: number): { x: number; y: number } {
     const t = this.turrets[i];
     const m = this.mount(i);
-    const len = 34;
+    const len = 34 * TURRET_SCALE;
     return { x: m.x + Math.cos(t.rotation) * len * this.dir, y: m.y + Math.sin(t.rotation * this.dir) * len };
+  }
+
+  private applyArt(): void {
+    const key = baseTextureKey(this.era, this.side.id);
+    this.img.setTexture(key);
+    const art = BASE_ART[this.era];
+    const w = this.img.width;
+    const k = w / ART_SIZE; // 원화 → 텍스처 배율
+    const s = BASE_SCALE / k;
+    this.img.setOrigin(art.anchorX / ART_SIZE, art.bottom / ART_SIZE).setScale(s * this.dir, s);
+    // 받침 위치가 바뀌므로 포탑·자물쇠도 옮긴다
+    for (let i = 0; i < this.turrets.length; i++) {
+      const m = this.mount(i);
+      this.turrets[i].setPosition(m.x, m.y);
+      this.locks[i].setPosition(m.x, m.y + TURRET_FOOT * TURRET_SCALE);
+    }
   }
 
   setEra(era: number, instant = false): void {
     if (era === this.era) return;
     this.era = era;
-    const key = baseTexture(this.scene, era, this.side.id);
     if (instant) {
-      this.img.setTexture(key);
-      applyOrigin(this.img);
+      this.applyArt();
       return;
     }
     this.scene.tweens.add({
       targets: this.img,
-      scaleY: 0.1,
+      scaleY: this.img.scaleY * 0.1,
       duration: 180,
       ease: 'Quad.In',
       onComplete: () => {
-        this.img.setTexture(key);
-        applyOrigin(this.img);
-        this.scene.tweens.add({ targets: this.img, scaleY: 1, duration: 380, ease: 'Back.Out' });
+        this.applyArt();
+        const ty = this.img.scaleY;
+        this.img.setScale(this.img.scaleX, ty * 0.1);
+        this.scene.tweens.add({ targets: this.img, scaleY: ty, duration: 380, ease: 'Back.Out' });
       },
     });
   }
@@ -376,19 +371,16 @@ export class BaseView {
     for (let i = 0; i < this.turrets.length; i++) {
       const t = s.turrets[i];
       const img = this.turrets[i];
-      const plate = this.plates[i];
-      const locked = i >= s.unlockedSlots;
-      const pk = locked ? 'plate_locked' : 'plate_open';
-      if (plate.texture.key !== pk) applyOrigin(plate.setTexture(plateTexture(this.scene, locked)));
+      this.locks[i].setVisible(i >= s.unlockedSlots);
       if (!t) {
         img.setVisible(false);
         continue;
       }
       const key = turretTexture(this.scene, t.era, t.tier, s.id);
       if (img.texture.key !== key) {
-        applyOrigin(img.setTexture(key)).setScale(this.dir, 1).setVisible(true);
+        applyOrigin(img.setTexture(key)).setVisible(true);
         img.setScale(0.1 * this.dir, 0.1);
-        this.scene.tweens.add({ targets: img, scaleX: this.dir, scaleY: 1, duration: 260, ease: 'Back.Out' });
+        this.scene.tweens.add({ targets: img, scaleX: this.dir * TURRET_SCALE, scaleY: TURRET_SCALE, duration: 260, ease: 'Back.Out' });
       }
       img.setVisible(true);
       // 대상 방향으로 포신 회전(아래쪽만)
@@ -406,9 +398,9 @@ export class BaseView {
     // HP 바 (기지 바깥쪽 세로 바)
     const b = s.base;
     const r = Math.max(0, b.hp / b.maxHp);
-    const bx = this.x - this.dir * 96;
-    const top = GROUND - 250;
-    const h = 200;
+    const bx = this.x - this.dir * 106;
+    const top = GROUND - 230;
+    const h = 180;
     const g = this.hpGfx;
     g.clear();
     g.fillStyle(0x0b0d14, 0.9).fillRoundedRect(bx - 11, top - 3, 22, h + 6, 6);

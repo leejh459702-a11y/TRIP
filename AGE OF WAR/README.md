@@ -1,7 +1,7 @@
 # 크로노 프론트 (Chrono Front)
 
 원시 시대부터 미래 시대까지, **한 줄의 전선**에서 기지를 지키고 적 기지를 무너뜨리는 브라우저용 2D 횡스크롤 디펜스/러시 게임입니다.
-유닛 15종은 컨셉아트(`art/unit-concepts.webp`)에서 잘라낸 스프라이트를, 시대별 배경은 배경 그림 5장(`src/assets/backgrounds/`)을 씁니다. 기지·포탑·이펙트는 Phaser Graphics로 코드 드로잉한 벡터 카툰 스타일이고, 효과음은 모두 WebAudio로 합성합니다(사운드 파일 없음).
+유닛 15종은 컨셉아트(`art/unit-concepts.webp`)에서 잘라낸 스프라이트를, 시대별 배경은 배경 그림 5장(`src/assets/backgrounds/`), 기지는 기지 그림 5장(`src/assets/bases/`)을 씁니다. 포탑·이펙트는 Phaser Graphics로 코드 드로잉한 벡터 카툰 스타일이고, 효과음은 모두 WebAudio로 합성합니다(사운드 파일 없음).
 
 - 기술 스택: Vite 7 + TypeScript 5 + Phaser 3.90, 테스트는 Vitest 3
 - 해상도: 1280×720 기준, `Scale.FIT` 반응형, 터치 지원
@@ -75,6 +75,7 @@ src/
             Background(배경 그림 원경 패럴랙스 + 지면 띠) · BaseRenderer(기지/포탑) · Effects · draw(펜/팔레트)
   assets/units/  유닛 스프라이트 15종(webp, 표시 크기의 2배 해상도)
   assets/backgrounds/  시대별 배경 그림 era0~4(webp, 1672×941)
+  assets/bases/  시대별 기지 그림 era0~4(webp 440px, 원본 1254px은 art/bases/)
 art/        unit-concepts.webp (유닛 컨셉아트 원본)
   audio/    Sfx.ts (WebAudio 합성)
 tests/      Vitest 단위 테스트
@@ -98,6 +99,15 @@ scripts/    sim.ts · matchup.ts (헤드리스 밸런스 도구) · extract-unit
    - `walk`: 유닛 발이 닿을 높이(게임의 지면선 `groundY`에 맞춰짐)
    - `band`: 지면 띠가 시작하는 높이. 여기부터 아래를 잘라 좌우 반전으로 이어 붙여 전장 전체에 깝니다.
 3. 원경은 `ART_SCALE`(기본 0.85) 배율로 그려지며, 카메라 이동 범위를 딱 덮도록 느리게 스크롤됩니다.
+
+## 기지 그림 교체하기
+
+1. 원본(1254×1254, 투명 배경, 오른쪽을 보는 기지, 포탑 받침 3칸)을 `art/bases/era{0-4}.webp`에 두고, 440px로 줄인 사본을 `src/assets/bases/`에 넣습니다.
+2. `src/render/BaseRenderer.ts`의 `BASE_ART`에 원본 좌표로 기준점을 적습니다.
+   - `anchorX`: 기지 중심(base.x)에 올 x. 기지 앞 가장자리가 base.x+85 근처에 오도록 잡습니다.
+   - `bottom`: 지면에 닿는 y
+   - `slots`: 포탑 받침 윗면 중앙 3곳(위 칸부터). 포탑은 이 점 위에 `TURRET_SCALE` 배율로 놓입니다.
+3. 적 기지는 파란 계열 색을 빨강으로 바꾸고 좌우 반전해 자동으로 만듭니다.
 
 ## balance.ts 수정 가이드
 
