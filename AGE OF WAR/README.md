@@ -25,8 +25,9 @@ npm run matchup -- hardP,easyP       # AI 파라미터 변형끼리 10판 대전
 
 https://raw.githack.com/leejh459702-a11y/TRIP/claude/clever-cray-oqrc8x/AGE%20OF%20WAR/play/index.html
 
+- GitHub Pages 주소: https://leejh459702-a11y.github.io/TRIP/ (저장소 루트 `docs/index.html`. 저장소 설정 → Pages에서 이 브랜치의 `/docs` 폴더를 배포 원본으로 지정)
 - `play/index.html`은 그림과 코드를 모두 담은 단일 파일입니다. 내려받아 브라우저로 열어도 실행됩니다.
-- 게임을 수정한 뒤에는 `npm run build:single`로 이 파일을 다시 만들어 커밋합니다.
+- 게임을 수정한 뒤에는 `npm run build:single`로 이 파일(과 `docs/index.html`)을 다시 만들어 커밋합니다.
 
 ## 조작법
 
