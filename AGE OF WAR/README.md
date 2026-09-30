@@ -37,6 +37,11 @@ npm run matchup -- hardP,easyP       # AI 파라미터 변형끼리 10판 대전
 
 터치 기기에서는 버튼을 탭하면 실행되고 툴팁이 잠시 표시됩니다. 전장은 드래그해서 스크롤합니다.
 
+**모바일 가로 모드**: 휴대폰에서는 항상 가로 화면으로 실행됩니다(`src/orientation.ts`).
+- 첫 터치에 전체 화면으로 바꾸고 가로 방향 고정을 시도합니다. 안드로이드 크롬 등에서 동작합니다.
+- 고정할 수 없는 환경(iOS 사파리, 앱 내 브라우저, 다른 페이지에 삽입된 경우)에서 폰을 세로로 들면 게임 화면을 90° 돌려서 보여 줍니다. 폰을 왼쪽으로 눕히면 바로 가로 게임이 되고, 터치 좌표도 회전에 맞춰 변환됩니다.
+- 화면 맞춤과 가운데 정렬도 이 모듈이 직접 합니다. Phaser 스케일 모드는 `NONE`입니다.
+
 ### HUD
 - **좌상단**: 현재 시대, 골드, EXP, 진화 진행 게이지와 진화 버튼 (진화 가능 시 반짝임)
 - **상단 중앙**: 생산 대기열 5칸 아이콘과 현재 생산 진행 바 (스폰 지점이 막히면 주황색 "스폰 대기 중")
@@ -89,7 +94,7 @@ npm run matchup -- hardP,easyP       # AI 파라미터 변형끼리 10판 대전
 
 ```
 src/
-  main.ts
+  main.ts · orientation.ts (화면 맞춤, 모바일 가로 모드)
   config/   balance.ts (모든 수치) · eras.ts (시대별 이름/외형 + 스탯 계산) · ai.ts (난이도) · story.ts (스토리 스테이지·강화)
   scenes/   BootScene(텍스처 생성) · MenuScene · StoryScene(스테이지 선택·강화) · GameScene · UIScene(HUD) · ResultScene · ui/(Button, DebugPanel, theme)
   entities/ Unit · Turret · Base · Projectile        ← 순수 데이터
