@@ -29,6 +29,6 @@ export function evolveProgress(side: Pick<SideState, 'era' | 'exp'>): number {
 export function evolve(side: SideState): boolean {
   if (!canEvolve(side)) return false;
   side.era += 1;
-  side.base.setMaxHpKeepRatio(BALANCE.era.baseMaxHp[side.era]);
+  side.base.setMaxHpKeepRatio(BALANCE.era.baseMaxHp[side.era] * side.base.hpMult);
   return true;
 }

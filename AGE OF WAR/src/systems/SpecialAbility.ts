@@ -21,7 +21,7 @@ export function activateSpecial(world: SpecialWorld, sideId: SideId): boolean {
   const side = world.sides[sideId];
   if (side.specialCooldown > 0) return false;
   const cfg = BALANCE.special;
-  side.specialCooldown = cfg.cooldown;
+  side.specialCooldown = cfg.cooldown * side.mods.specialCooldown;
   const enemyBase = world.sides[sideId === 0 ? 1 : 0].base;
   const from = side.base.frontX + side.dir * cfg.minDistanceFromOwnBase;
   const to = enemyBase.frontX;

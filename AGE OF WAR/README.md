@@ -61,16 +61,40 @@ npm run matchup -- hardP,easyP       # AI 파라미터 변형끼리 10판 대전
 | 화약 | 머스킷병 | 저격병 | 대포 수레 | 집중 포격 | 요새 |
 | 미래 | 사이버 병사 | 레이저 저격수 | 메크 워커 | 궤도 레이저 | 미래 기지 |
 
+## 스토리 모드
+
+메뉴의 **스토리 모드**(단축키 S)에서 1-1 → 5-5까지 25개 스테이지를 차례로 깹니다. 스테이지를 이기면 다음 스테이지가 열리고 강화 포인트를 받습니다.
+
+- **보상**: 첫 클리어 +3P(1장)~+7P(5장), 이미 깬 스테이지 재도전 승리 +1P
+- **난이도 곡선**(`src/config/story.ts`의 `getStage`)
+  - 1장은 쉬움 AI이고, 적 반응 지연이 2.5초에서 0.5초로 줄어듭니다.
+  - 2~3장은 보통 AI, 4~5장은 어려움 AI를 씁니다.
+  - 스테이지마다 적 수입 +3.5%p(1-1 0.7배 → 5-5 1.54배), 적 기지 HP +3%p가 오르고(5-5 1.72배), 2-1부터는 적 유닛 HP·공격력이 +1.5%p씩 오릅니다(5-5 1.3배).
+- **강화**(스테이지 선택 화면 오른쪽, 항목마다 최대 10레벨, 다음 레벨 비용 = 현재 레벨+1 포인트)
+
+| 강화 | 레벨당 효과 | 최대 |
+| --- | --- | --- |
+| 유닛 강화 | 유닛 HP·공격력 +5% | +50% |
+| 특수기 쿨타임 감소 | 쿨타임 −5% | −50% |
+| 초당 골드 증가 | 초당 기본 수입 +10% | +100% |
+| 처치 골드 증가 | 처치 골드 +10% | +100% |
+| 기지 체력 증가 | 기지 최대 HP +10% | +100% |
+
+- 강화는 스토리 모드에만 적용되고, **강화 초기화**로 쓴 포인트를 모두 돌려받을 수 있습니다.
+- 진행 상황은 브라우저 저장소(`localStorage`, 키 `chronofront.story.v1`)에 저장됩니다. 저장소를 쓸 수 없는 환경에서는 그 세션 동안만 유지됩니다.
+- 난이도 곡선 점검: `npm run story-sim [판수]`로 확인합니다. 보통 AI를 플레이어 대역으로 두고, 강화가 없을 때와 그 스테이지까지의 첫 클리어 포인트를 고르게 투자했을 때의 승률을 봅니다. 현재 곡선에서는 강화 없이 2장부터 지고, 강화하면 5-5까지 이길 수 있습니다(5-5는 6판 중 4승).
+- 게임 로직에서는 진영별 강화 배율 `SideMods`(유닛 스탯·특수기 쿨·수입·처치 골드·기지 HP)로 처리합니다. 적 보정도 같은 구조를 씁니다.
+
 ## 폴더 구조
 
 ```
 src/
   main.ts
-  config/   balance.ts (모든 수치) · eras.ts (시대별 이름/외형 + 스탯 계산) · ai.ts (난이도)
-  scenes/   BootScene(텍스처 생성) · MenuScene · GameScene · UIScene(HUD) · ResultScene · ui/(Button, DebugPanel, theme)
+  config/   balance.ts (모든 수치) · eras.ts (시대별 이름/외형 + 스탯 계산) · ai.ts (난이도) · story.ts (스토리 스테이지·강화)
+  scenes/   BootScene(텍스처 생성) · MenuScene · StoryScene(스테이지 선택·강화) · GameScene · UIScene(HUD) · ResultScene · ui/(Button, DebugPanel, theme)
   entities/ Unit · Turret · Base · Projectile        ← 순수 데이터
   systems/  GameWorld(명령 API/스텝) · CombatSystem · EconomySystem · ProductionQueue
-            EraSystem · SpecialAbility · EnemyAI · rng · types   ← Phaser 비의존 순수 TS
+            EraSystem · SpecialAbility · EnemyAI · StoryProgress(저장·보상·강화) · rng · types   ← Phaser 비의존 순수 TS
   render/   UnitRenderer(스프라이트 로드·적 색 변환·모션) · unitSprites(자동 생성 매니페스트)
             Background(배경 그림 원경 패럴랙스 + 지면 띠) · BaseRenderer(기지/포탑) · Effects · draw(펜/팔레트)
   assets/units/  유닛 스프라이트 15종(webp, 표시 크기의 2배 해상도)
@@ -79,7 +103,7 @@ src/
 art/        unit-concepts.webp (유닛 컨셉아트 원본)
   audio/    Sfx.ts (WebAudio 합성)
 tests/      Vitest 단위 테스트
-scripts/    sim.ts · matchup.ts (헤드리스 밸런스 도구) · extract-units.py (컨셉아트 → 유닛 스프라이트)
+scripts/    sim.ts · matchup.ts · story-sim.ts (헤드리스 밸런스 도구) · extract-units.py (컨셉아트 → 유닛 스프라이트)
 ```
 
 `systems/`는 Phaser를 import하지 않습니다. `GameScene`은 `GameWorld.step(1/60)`을 고정 스텝으로 호출하고, `drainEvents()`로 받은 이벤트(`spawn`, `shoot`, `death`, `evolve` …)로 애니메이션, 이펙트, 사운드를 재생합니다.

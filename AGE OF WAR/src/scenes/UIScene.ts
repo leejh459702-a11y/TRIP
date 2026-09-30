@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { BALANCE, type TurretTier, type UnitRole } from '../config/balance';
 import { ERAS, getTurretStats, getUnitStats, TURRET_TIERS, UNIT_ROLES } from '../config/eras';
+import { stageLabel } from '../config/story';
 import { evolveProgress, expRequired, MAX_ERA } from '../systems/EraSystem';
 import { sellRefund } from '../systems/GameWorld';
 import type { CommandResult } from '../systems/types';
@@ -431,7 +432,7 @@ export class UIScene extends Phaser.Scene {
     const lines = [
       `${ERAS[s.era + 1].name}로 진화`,
       `필요 EXP ${fmt(req)} (현재 ${fmt(s.exp)})`,
-      `기지 최대 HP ${fmt(BALANCE.era.baseMaxHp[s.era])} → ${fmt(BALANCE.era.baseMaxHp[s.era + 1])}`,
+      `기지 최대 HP ${fmt(s.base.maxHp)} → ${fmt(BALANCE.era.baseMaxHp[s.era + 1] * s.base.hpMult)}`,
       '새 유닛/포탑/특수기 해금',
     ];
     if (s.exp < req) lines.push('⚠ EXP가 부족합니다');
@@ -451,7 +452,8 @@ export class UIScene extends Phaser.Scene {
       this.configureActions();
     }
 
-    this.eraText.setText(`${s.era + 1}시대 · ${ERAS[s.era].name}`);
+    const stage = this.game_.stage;
+    this.eraText.setText(`${stage !== null ? `[${stageLabel(stage)}] ` : ''}${s.era + 1}시대 · ${ERAS[s.era].name}`);
     this.goldText.setText(fmt(s.gold));
     const req = expRequired(s.era);
     this.expText.setText(req === null ? `EXP ${fmt(s.exp)} (최종 시대)` : `EXP ${fmt(s.exp)} / ${fmt(req)}`);
@@ -529,7 +531,7 @@ export class UIScene extends Phaser.Scene {
     g.fillStyle(0x0b0d14).fillCircle(cx, cy + 3, r + 4);
     g.fillStyle(ready ? (this.specialHover ? 0xe8553b : 0xd8432b) : 0x3a3d47).fillCircle(cx, cy, r);
     if (!ready) {
-      const frac = s.specialCooldown / BALANCE.special.cooldown;
+      const frac = Math.min(1, s.specialCooldown / (BALANCE.special.cooldown * s.mods.specialCooldown));
       g.fillStyle(0x000000, 0.45);
       g.slice(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * frac, false).fillPath();
       g.lineStyle(4, 0xffe066).beginPath().arc(cx, cy, r - 2, -Math.PI / 2 + Math.PI * 2 * frac, Math.PI * 1.5, false).strokePath();

@@ -3,6 +3,7 @@ import { sfx, type Sfx } from '../audio/Sfx';
 import { AI_PARAMS, type Difficulty } from '../config/ai';
 import { BALANCE } from '../config/balance';
 import { ERAS } from '../config/eras';
+import { getStage, STAGE_COUNT, upgradeMods } from '../config/story';
 import type { Projectile } from '../entities/Projectile';
 import type { SideId } from '../entities/Unit';
 import { Background } from '../render/Background';
@@ -12,6 +13,7 @@ import { Effects } from '../render/Effects';
 import { UnitView } from '../render/UnitRenderer';
 import { EnemyAI } from '../systems/EnemyAI';
 import { GameWorld } from '../systems/GameWorld';
+import { loadStory, recordWin, saveStory } from '../systems/StoryProgress';
 import type { CommandResult, GameEvent } from '../systems/types';
 
 const GROUND = BALANCE.world.groundY;
@@ -23,6 +25,8 @@ export class GameScene extends Phaser.Scene {
   readonly sfx: Sfx = sfx;
   paused = false;
   difficulty: Difficulty = 'normal';
+  /** 스토리 모드 스테이지(0부터). null 이면 기본 모드 */
+  stage: number | null = null;
   private speedIdx = 0;
   private acc = 0;
   private ended = false;
@@ -45,14 +49,25 @@ export class GameScene extends Phaser.Scene {
     return BALANCE.sim.speedOptions[this.speedIdx];
   }
 
-  init(data: { difficulty?: Difficulty }): void {
+  init(data: { difficulty?: Difficulty; stage?: number }): void {
     this.difficulty = data?.difficulty ?? 'normal';
+    this.stage = typeof data?.stage === 'number' ? Math.max(0, Math.min(STAGE_COUNT - 1, data.stage)) : null;
   }
 
   create(): void {
-    const params = AI_PARAMS[this.difficulty];
-    this.world = new GameWorld({ seed: Date.now() >>> 0, incomeMult: [params.playerIncomeMult, params.incomeMult] });
-    this.ai = new EnemyAI(this.world, 1, this.difficulty);
+    const seed = Date.now() >>> 0;
+    if (this.stage !== null) {
+      // 스토리: 스테이지별 적 AI·보정 + 플레이어 영구 강화
+      const st = getStage(this.stage);
+      const mods = upgradeMods(loadStory().levels);
+      this.world = new GameWorld({ seed, incomeMult: [1, st.enemyIncomeMult], mods: [mods, st.enemyMods] });
+      this.ai = new EnemyAI(this.world, 1, st.ai);
+      this.time.delayedCall(400, () => this.events.emit('banner', `스테이지 ${st.label}`, '#ffe066'));
+    } else {
+      const params = AI_PARAMS[this.difficulty];
+      this.world = new GameWorld({ seed, incomeMult: [params.playerIncomeMult, params.incomeMult] });
+      this.ai = new EnemyAI(this.world, 1, this.difficulty);
+    }
     this.acc = 0;
     this.paused = false;
     this.speedIdx = 0;
@@ -192,8 +207,21 @@ export class GameScene extends Phaser.Scene {
     if (this.endTimer < BALANCE.sim.resultDelay || this.goingToResult) return;
     this.goingToResult = true;
     const p = this.world.side(0);
+    const win = this.world.winner === 0;
+    // 스토리: 승리 시 진행 저장 + 강화 포인트 지급
+    let points = 0;
+    let firstClear = false;
+    if (this.stage !== null && win) {
+      const save = loadStory();
+      firstClear = this.stage === save.cleared;
+      points = recordWin(save, this.stage);
+      saveStory(save);
+    }
     this.scene.stop('UIScene');
-    this.scene.start('ResultScene', { win: this.world.winner === 0, time: this.world.time, kills: p.stats.kills, era: p.era, difficulty: this.difficulty });
+    this.scene.start('ResultScene', {
+      win, time: this.world.time, kills: p.stats.kills, era: p.era, difficulty: this.difficulty,
+      stage: this.stage, points, firstClear,
+    });
   }
 
   private inView(x: number): boolean {
@@ -387,7 +415,7 @@ export class GameScene extends Phaser.Scene {
     const p = this.ai.lastPerception;
     const s1 = w.side(1);
     return [
-      `AI(${AI_PARAMS[this.difficulty].label}) 모드: ${this.ai.mode}  웨이브 대기: ${this.ai.pendingWave.length}`,
+      `AI(${this.ai.params.label}) 모드: ${this.ai.mode}  웨이브 대기: ${this.ai.pendingWave.length}`,
       `AI 전력(필드+대기열): ${Math.round(p?.myPower ?? 0).toLocaleString()}`,
       `플레이어 전력(AI 인지): ${Math.round(p?.enemyPower ?? 0).toLocaleString()}`,
       `플레이어 필드 전력: ${Math.round(w.fieldPower(0)).toLocaleString()}`,

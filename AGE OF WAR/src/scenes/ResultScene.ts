@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { sfx } from '../audio/Sfx';
 import { AI_PARAMS, type Difficulty } from '../config/ai';
 import { ERAS } from '../config/eras';
+import { STAGE_COUNT, stageLabel } from '../config/story';
 import { gradientRect } from '../render/draw';
 import { Button } from './ui/Button';
 import { textStyle, UI } from './ui/theme';
@@ -12,6 +13,11 @@ export interface ResultData {
   kills: number;
   era: number;
   difficulty: Difficulty;
+  /** 스토리 모드 스테이지(기본 모드면 null) */
+  stage?: number | null;
+  /** 이번 판에 얻은 강화 포인트 */
+  points?: number;
+  firstClear?: boolean;
 }
 
 export function formatTime(sec: number): string {
@@ -35,23 +41,37 @@ export class ResultScene extends Phaser.Scene {
     this.tweens.add({ targets: title, scale: 1, duration: 500, ease: 'Back.Out' });
     this.add.text(width / 2, 250, data.win ? '적 기지를 무너뜨렸습니다' : '기지가 함락되었습니다', textStyle(22, UI.text, false)).setOrigin(0.5);
 
+    const story = typeof data.stage === 'number';
     const rows: [string, string][] = [
-      ['난이도', AI_PARAMS[data.difficulty].label],
+      story ? ['스테이지', stageLabel(data.stage!)] : ['난이도', AI_PARAMS[data.difficulty].label],
       ['플레이 시간', formatTime(data.time)],
       ['처치 수', `${data.kills}`],
       ['도달 시대', `${data.era + 1}시대 · ${ERAS[data.era].name}`],
     ];
+    if (story) rows.push(['강화 포인트', data.win ? `+${data.points ?? 0}P${data.firstClear ? ' (첫 클리어)' : ''}` : '없음']);
     const panel = this.add.graphics();
-    panel.fillStyle(UI.panelEdge, 0.9).fillRoundedRect(width / 2 - 230, 292, 460, 190, 14);
-    panel.fillStyle(UI.panel, 0.95).fillRoundedRect(width / 2 - 226, 296, 452, 182, 12);
+    const ph = 30 + rows.length * 40;
+    panel.fillStyle(UI.panelEdge, 0.9).fillRoundedRect(width / 2 - 230, 292, 460, ph + 8, 14);
+    panel.fillStyle(UI.panel, 0.95).fillRoundedRect(width / 2 - 226, 296, 452, ph, 12);
     rows.forEach(([k, v], i) => {
       this.add.text(width / 2 - 200, 316 + i * 40, k, textStyle(20, UI.textDim, false));
       this.add.text(width / 2 + 200, 316 + i * 40, v, textStyle(22)).setOrigin(1, 0);
     });
 
-    new Button(this, { x: width / 2 - 120, y: 550, w: 210, h: 58, label: '다시 하기', fontSize: 20, onClick: () => this.go('GameScene', { difficulty: data.difficulty }) });
-    new Button(this, { x: width / 2 + 120, y: 550, w: 210, h: 58, label: '메뉴로', fontSize: 20, onClick: () => this.go('MenuScene') });
-    this.input.keyboard!.once('keydown-ENTER', () => this.go('GameScene', { difficulty: data.difficulty }));
+    const by = 380 + rows.length * 40;
+    if (story) {
+      const stage = data.stage!;
+      const hasNext = data.win && stage + 1 < STAGE_COUNT;
+      const primary = hasNext ? { stage: stage + 1 } : { stage };
+      new Button(this, { x: width / 2 - 240, y: by, w: 210, h: 58, label: hasNext ? `다음 스테이지 ${stageLabel(stage + 1)}` : data.win ? '다시 하기' : '다시 도전', fontSize: 19, onClick: () => this.go('GameScene', primary) });
+      new Button(this, { x: width / 2, y: by, w: 210, h: 58, label: '강화하기', sub: '스테이지 선택', fontSize: 20, subColor: UI.textDim, onClick: () => this.go('StoryScene') });
+      new Button(this, { x: width / 2 + 240, y: by, w: 210, h: 58, label: '메뉴로', fontSize: 20, onClick: () => this.go('MenuScene') });
+      this.input.keyboard!.once('keydown-ENTER', () => this.go('GameScene', primary));
+    } else {
+      new Button(this, { x: width / 2 - 120, y: by, w: 210, h: 58, label: '다시 하기', fontSize: 20, onClick: () => this.go('GameScene', { difficulty: data.difficulty }) });
+      new Button(this, { x: width / 2 + 120, y: by, w: 210, h: 58, label: '메뉴로', fontSize: 20, onClick: () => this.go('MenuScene') });
+      this.input.keyboard!.once('keydown-ENTER', () => this.go('GameScene', { difficulty: data.difficulty }));
+    }
   }
 
   private go(scene: string, data?: object): void {

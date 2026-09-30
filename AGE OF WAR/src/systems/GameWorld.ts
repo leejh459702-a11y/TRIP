@@ -10,12 +10,14 @@ import { canEvolve, evolve } from './EraSystem';
 import { ProductionQueue, tryEnqueue, type QueueItem } from './ProductionQueue';
 import { createRng } from './rng';
 import { activateSpecial, updateSpecials, type SpecialWorld } from './SpecialAbility';
-import type { CommandResult, GameEvent, SideState, SpecialDrop } from './types';
+import { DEFAULT_MODS, type CommandResult, type GameEvent, type SideMods, type SideState, type SpecialDrop } from './types';
 
 export interface WorldOptions {
   seed?: number;
   /** 진영별 수입 배율 [플레이어, 적] (난이도 보정) */
   incomeMult?: [number, number];
+  /** 진영별 강화 배율 [플레이어, 적] (스토리 모드) */
+  mods?: [Partial<SideMods>?, Partial<SideMods>?];
   /** false 면 초당 기본 수입을 끈다(테스트용) */
   passiveIncome?: boolean;
 }
@@ -23,19 +25,21 @@ export interface WorldOptions {
 const OK: CommandResult = { ok: true };
 const fail = (reason: string): CommandResult => ({ ok: false, reason });
 
-function createSide(id: SideId, incomeMult: number): SideState {
+function createSide(id: SideId, incomeMult: number, partialMods?: Partial<SideMods>): SideState {
+  const mods: SideMods = { ...DEFAULT_MODS, ...partialMods };
   return {
     id,
     dir: id === 0 ? 1 : -1,
     gold: BALANCE.economy.startGold,
     exp: 0,
     era: 0,
-    base: new Base(id, 0),
+    base: new Base(id, 0, mods.baseHp),
     queue: new ProductionQueue(),
     turrets: new Array(BALANCE.turret.slotCount).fill(null),
     unlockedSlots: 1,
-    specialCooldown: BALANCE.special.initialCooldown,
+    specialCooldown: BALANCE.special.initialCooldown * mods.specialCooldown,
     incomeMult,
+    mods,
     stats: { kills: 0, unitsTrained: 0, goldEarned: 0, unitsLost: 0 },
   };
 }
@@ -59,7 +63,7 @@ export class GameWorld implements SpecialWorld {
 
   constructor(opts: WorldOptions = {}) {
     const mult = opts.incomeMult ?? [1, 1];
-    this.sides = [createSide(0, mult[0]), createSide(1, mult[1])];
+    this.sides = [createSide(0, mult[0], opts.mods?.[0]), createSide(1, mult[1], opts.mods?.[1])];
     this.rng = createRng(opts.seed ?? Date.now());
     this.passiveIncome = opts.passiveIncome ?? true;
   }
@@ -134,7 +138,7 @@ export class GameWorld implements SpecialWorld {
 
   spawnUnit(sideId: SideId, item: Pick<QueueItem, 'role' | 'era'>, x?: number): Unit {
     const side = this.sides[sideId];
-    const u = new Unit(this.nextId(), sideId, item.role, item.era, x ?? this.spawnX(side, item.role));
+    const u = new Unit(this.nextId(), sideId, item.role, item.era, x ?? this.spawnX(side, item.role), side.mods.unitStat);
     this.units.push(u);
     this.unitMap.set(u.id, u);
     side.stats.unitsTrained += 1;

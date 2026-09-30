@@ -8,11 +8,15 @@ export class Base {
   hp: number;
   maxHp: number;
 
-  constructor(side: SideId, era = 0) {
+  /** 최대 HP 배율(진영 강화) */
+  readonly hpMult: number;
+
+  constructor(side: SideId, era = 0, hpMult = 1) {
     this.side = side;
     this.x = BALANCE.world.baseX[side];
     this.width = BALANCE.world.baseWidth;
-    this.maxHp = BALANCE.era.baseMaxHp[era];
+    this.hpMult = hpMult;
+    this.maxHp = BALANCE.era.baseMaxHp[era] * hpMult;
     this.hp = this.maxHp;
   }
 

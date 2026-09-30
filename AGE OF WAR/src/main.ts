@@ -3,6 +3,7 @@ import { BootScene } from './scenes/BootScene';
 import { GameScene } from './scenes/GameScene';
 import { MenuScene } from './scenes/MenuScene';
 import { ResultScene } from './scenes/ResultScene';
+import { StoryScene } from './scenes/StoryScene';
 import { UIScene } from './scenes/UIScene';
 
 const game = new Phaser.Game({
@@ -19,7 +20,7 @@ const game = new Phaser.Game({
   // 저사양에서 프레임 시간이 잘려 트윈·타이머가 느려지지 않도록 실제 경과 시간 사용
   fps: { smoothStep: false },
   render: { antialias: true },
-  scene: [BootScene, MenuScene, GameScene, UIScene, ResultScene],
+  scene: [BootScene, MenuScene, StoryScene, GameScene, UIScene, ResultScene],
 });
 
 // 개발 모드에서만 콘솔/자동화 테스트용 핸들 노출

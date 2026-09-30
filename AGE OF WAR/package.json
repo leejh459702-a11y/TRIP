@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "sim": "vite-node scripts/sim.ts",
-    "matchup": "vite-node scripts/matchup.ts"
+    "matchup": "vite-node scripts/matchup.ts",
+    "story-sim": "vite-node scripts/story-sim.ts"
   },
   "dependencies": {
     "phaser": "^3.90.0"
