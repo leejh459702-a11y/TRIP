@@ -86,7 +86,7 @@ describe('진영 강화 배율', () => {
     expect(mods.income).toBeCloseTo(1.5);
     expect(mods.killGold).toBeCloseTo(1.3);
     expect(mods.baseHp).toBeCloseTo(2);
-    expect(upgradeMods(emptyLevels())).toEqual({ unitStat: 1, specialCooldown: 1, income: 1, killGold: 1, baseHp: 1 });
+    expect(upgradeMods(emptyLevels())).toEqual({ unitStat: 1, unitHp: 1, specialCooldown: 1, income: 1, killGold: 1, baseHp: 1 });
   });
 
   it('유닛·기지·특수기·수입·처치 골드에 적용', () => {

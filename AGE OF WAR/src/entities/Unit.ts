@@ -22,14 +22,14 @@ export class Unit {
   /** 마지막으로 공격한 시각(월드 시간) — 연출용 */
   lastAttackAt = -1;
 
-  /** statMult: 진영 강화 배율(HP·공격력) */
-  constructor(id: number, side: SideId, role: UnitRole, era: number, x: number, statMult = 1) {
+  /** statMult: 진영 강화 배율(HP·공격력), hpMult: HP만 추가 배율 */
+  constructor(id: number, side: SideId, role: UnitRole, era: number, x: number, statMult = 1, hpMult = 1) {
     this.id = id;
     this.side = side;
     this.role = role;
     this.era = era;
     const base = getUnitStats(role, era);
-    this.stats = statMult === 1 ? base : { ...base, hp: Math.round(base.hp * statMult), atk: base.atk * statMult };
+    this.stats = statMult === 1 && hpMult === 1 ? base : { ...base, hp: Math.round(base.hp * statMult * hpMult), atk: base.atk * statMult };
     this.x = x;
     this.hp = this.stats.hp;
   }

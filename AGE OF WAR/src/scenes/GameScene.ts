@@ -65,7 +65,7 @@ export class GameScene extends Phaser.Scene {
       this.time.delayedCall(400, () => this.events.emit('banner', `스테이지 ${st.label}`, '#ffe066'));
     } else {
       const params = AI_PARAMS[this.difficulty];
-      this.world = new GameWorld({ seed, incomeMult: [params.playerIncomeMult, params.incomeMult] });
+      this.world = new GameWorld({ seed, incomeMult: [params.playerIncomeMult, params.incomeMult], mods: [undefined, { unitHp: params.unitHpMult }] });
       this.ai = new EnemyAI(this.world, 1, this.difficulty);
     }
     this.acc = 0;

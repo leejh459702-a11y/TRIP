@@ -4,9 +4,10 @@ import { Background, preloadBackgrounds } from '../render/Background';
 import { ensureTurretIcon, preloadBases, prepareBaseTextures, turretTexture } from '../render/BaseRenderer';
 import { prepareEffectTextures } from '../render/Effects';
 import { ensureUnitIcon, preloadUnitSprites, prepareUnitSprites } from '../render/UnitRenderer';
+import { preloadMenu } from './MenuScene';
 import { textStyle } from './ui/theme';
 
-/** 유닛 스프라이트·배경·기지 그림을 불러오고, 벡터 텍스처를 여러 프레임에 나눠 생성한 뒤 메뉴로 이동 */
+/** 유닛 스프라이트·배경·기지·메뉴 그림을 불러오고, 벡터 텍스처를 여러 프레임에 나눠 생성한 뒤 메뉴로 이동 */
 export class BootScene extends Phaser.Scene {
   constructor() {
     super('BootScene');
@@ -16,6 +17,7 @@ export class BootScene extends Phaser.Scene {
     preloadUnitSprites(this);
     preloadBackgrounds(this);
     preloadBases(this);
+    preloadMenu(this);
   }
 
   create(): void {

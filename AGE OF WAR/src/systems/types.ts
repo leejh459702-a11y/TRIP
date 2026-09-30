@@ -13,6 +13,8 @@ import type { ProductionQueue } from './ProductionQueue';
 export interface SideMods {
   /** 유닛 HP·공격력 배율 */
   unitStat: number;
+  /** 유닛 HP만 추가로 곱하는 배율(난이도 보정: 쉬움의 적 체력 −30%) */
+  unitHp: number;
   /** 특수기 쿨다운 배율(작을수록 빠름) */
   specialCooldown: number;
   /** 초당 기본 수입 배율 */
@@ -23,7 +25,7 @@ export interface SideMods {
   baseHp: number;
 }
 
-export const DEFAULT_MODS: Readonly<SideMods> = { unitStat: 1, specialCooldown: 1, income: 1, killGold: 1, baseHp: 1 };
+export const DEFAULT_MODS: Readonly<SideMods> = { unitStat: 1, unitHp: 1, specialCooldown: 1, income: 1, killGold: 1, baseHp: 1 };
 
 export interface SideStats {
   kills: number;

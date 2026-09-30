@@ -138,7 +138,7 @@ export class GameWorld implements SpecialWorld {
 
   spawnUnit(sideId: SideId, item: Pick<QueueItem, 'role' | 'era'>, x?: number): Unit {
     const side = this.sides[sideId];
-    const u = new Unit(this.nextId(), sideId, item.role, item.era, x ?? this.spawnX(side, item.role), side.mods.unitStat);
+    const u = new Unit(this.nextId(), sideId, item.role, item.era, x ?? this.spawnX(side, item.role), side.mods.unitStat, side.mods.unitHp);
     this.units.push(u);
     this.unitMap.set(u.id, u);
     side.stats.unitsTrained += 1;

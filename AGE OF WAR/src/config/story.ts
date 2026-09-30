@@ -103,6 +103,7 @@ export function upgradeMods(levels: UpgradeLevels): SideMods {
   const up = (k: UpgradeKey) => (UPGRADES.find((u) => u.key === k)!.perLevel) * levels[k];
   return {
     unitStat: 1 + up('unitStat'),
+    unitHp: 1,
     specialCooldown: 1 - up('specialCooldown'),
     income: 1 + up('income'),
     killGold: 1 + up('killGold'),

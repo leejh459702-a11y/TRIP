@@ -108,7 +108,7 @@ src/
 art/        unit-concepts.webp (유닛 컨셉아트 원본)
   audio/    Sfx.ts (WebAudio 합성)
 tests/      Vitest 단위 테스트
-scripts/    sim.ts · matchup.ts · story-sim.ts (헤드리스 밸런스 도구) · extract-units.py (컨셉아트 → 유닛 스프라이트)
+scripts/    sim.ts · matchup.ts · story-sim.ts (헤드리스 밸런스 도구) · build-menu.py (메인 화면 에셋) · extract-units.py (컨셉아트 → 유닛 스프라이트)
 ```
 
 `systems/`는 Phaser를 import하지 않습니다. `GameScene`은 `GameWorld.step(1/60)`을 고정 스텝으로 호출하고, `drainEvents()`로 받은 이벤트(`spawn`, `shoot`, `death`, `evolve` …)로 애니메이션, 이펙트, 사운드를 재생합니다.
@@ -128,6 +128,15 @@ scripts/    sim.ts · matchup.ts · story-sim.ts (헤드리스 밸런스 도구)
    - `walk`: 유닛 발이 닿을 높이(게임의 지면선 `groundY`에 맞춰짐)
    - `band`: 지면 띠가 시작하는 높이. 여기부터 아래를 잘라 좌우 반전으로 이어 붙여 전장 전체에 깝니다.
 3. 원경은 `ART_SCALE`(기본 0.85) 배율로 그려지며, 카메라 이동 범위를 딱 덮도록 느리게 스크롤됩니다.
+
+## 메인 화면 그림 교체하기
+
+1. 시안 원본(1672×941)을 `art/menu/main-mockup.webp`에 둡니다. 참고용으로 따로 받은 버튼 그림도 `art/menu/btn-*.webp`에 보관해 두었습니다.
+2. `python3 scripts/build-menu.py`를 실행하면 `src/assets/menu/`에 배경(`bg.webp`)과 버튼 5개, 좌표 파일(`layout.json`)이 만들어집니다.
+   - 버튼은 시안 속 크기와 비율 그대로 잘라 같은 자리에 올립니다. 마우스를 올리면 커지고, 누르면 어두워집니다.
+   - 따로 받은 버튼 그림은 가로세로 비율(약 2.95:1)이 시안 속 버튼(약 2.4:1)과 달라, 비율을 지키려고 시안에서 잘라 씁니다.
+   - 시안의 잘못된 글자(스토리 부제 '업적 강화', 하단 조작 안내)는 지우고, 게임이 바른 문구를 그립니다.
+3. 버튼 위치가 달라지면 스크립트의 `BUTTONS` 좌표를, 지울 글자가 있으면 `ERASE` 영역을 고칩니다.
 
 ## 기지 그림 교체하기
 
@@ -173,7 +182,7 @@ scripts/    sim.ts · matchup.ts · story-sim.ts (헤드리스 밸런스 도구)
 - **대등하거나 우세하면** 골드를 모았다가 웨이브를 보냅니다. 첫 웨이브는 작은 오프닝 구성이고, 골드가 넘칠 때는 생산 시간 대비 전력이 높은 중장 위주로 편성합니다.
 - EXP가 충족되면 즉시 진화합니다. 여유 골드가 임계치 이상이면 포탑을 구매/교체하고 슬롯을 해금합니다.
 - 난이도
-  - 쉬움: 플레이어 골드 ×1.3, 적 수입 ×0.8, 적 판단 2초 지연
+  - 쉬움: 플레이어 골드 ×1.3, 적 유닛 체력 ×0.7(공격력·기지 체력은 그대로), 적 판단 2초 지연
   - 보통: 기준 (양측 ×1.0)
   - 어려움: 플레이어 골드 ×0.9, 적 수입 ×1.3, 포탑 우선, 적이 밀집하면 특수기 사용
   - 골드 배율은 기본 수입과 처치 골드에 적용됩니다(`config/ai.ts`의 `playerIncomeMult`, `incomeMult`).
