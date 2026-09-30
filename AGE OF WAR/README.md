@@ -21,6 +21,13 @@ npm run matchup -- hardP,easyP       # AI 파라미터 변형끼리 10판 대전
 
 흐름: **메뉴(난이도 선택) → 게임 → 결과(플레이 시간 / 처치 수 / 도달 시대) → 다시 하기 또는 메뉴**
 
+## 바로 플레이(웹 주소)
+
+https://raw.githack.com/leejh459702-a11y/TRIP/claude/clever-cray-oqrc8x/AGE%20OF%20WAR/play/index.html
+
+- `play/index.html`은 그림과 코드를 모두 담은 단일 파일입니다. 내려받아 브라우저로 열어도 실행됩니다.
+- 게임을 수정한 뒤에는 `npm run build:single`로 이 파일을 다시 만들어 커밋합니다.
+
 ## 조작법
 
 | 입력 | 동작 |

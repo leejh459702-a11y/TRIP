@@ -10,7 +10,8 @@
     "test": "vitest run",
     "sim": "vite-node scripts/sim.ts",
     "matchup": "vite-node scripts/matchup.ts",
-    "story-sim": "vite-node scripts/story-sim.ts"
+    "story-sim": "vite-node scripts/story-sim.ts",
+    "build:single": "npm run build && python3 scripts/build-single.py"
   },
   "dependencies": {
     "phaser": "^3.90.0"
